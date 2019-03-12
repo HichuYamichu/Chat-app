@@ -10,18 +10,22 @@ export default new Vuex.Store({
   },
 
   mutations:{
-    SOCKET_CONNECT(state) {
+    SOCKET_connect(state) {
       state.isConnected = true;
 			console.log('connected');
     },
 
-    SOCKET_DISCONNECT(state) {
+    SOCKET_disconnect(state) {
       state.isConnected = false;
 			console.log('disconnected');
     },
 
-    SOCKET_MESSAGECHANNEL(state, message) {
+    SOCKET_messageChannel(state, message) {
       state.socketMessage = message
-    }
+    },
+		SOCKETSERVER_connect(state) {
+      state.isConnected = true;
+			console.log('server');
+    },
   }
 })
