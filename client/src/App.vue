@@ -2,23 +2,20 @@
   <div class="home">
     <p v-if="$store.state.isConnected">We're connected to the server!</p>
     <p>Message from server: "{{ $store.state.socketMessage}}"</p>
-    <button @click="pingServer()">Ping Server</button>
-    <button @click="createServer()">createServer</button>
-    <button @click="check()">check</button>
+    <button @click="message()">message</button>
+    <button @click="create()">create</button>
   </div>
 </template>
 
 <script>
 export default {
   methods: {
-    pingServer() {
-      this.$mainSocket.emit("createServer", "lol");
-    },
-    createServer(data = 'name') {
-      this.$addServer(data)
-    },
-		check() {
-			console.log(this.$serverSockets)
+		message() {
+			this.$sendMessage('moje message')
+		},
+		async create() {
+			await this.axios.post('http://localhost:3000/api/new-server', {serverName: 'lolxD'})
+			this.$addServer('lolxD')
 		}
   }
 };
