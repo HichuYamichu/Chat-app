@@ -1,24 +1,11 @@
 <template>
-  <div class="home">
-    <p v-if="$store.state.isConnected">We're connected to the server!</p>
-    <p>Message from server: "{{ $store.state.socketMessage}}"</p>
-    <button @click="message()">message</button>
-    <button @click="create()">create</button>
+  <div>
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-export default {
-  methods: {
-		message() {
-			this.$sendMessage('moje message')
-		},
-		async create() {
-			await this.axios.post('http://localhost:3000/api/new-server', {serverName: 'lolxD'})
-			this.$addServer('lolxD')
-		}
-  }
-};
+export default {};
 </script>
 
 

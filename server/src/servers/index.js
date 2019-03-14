@@ -1,8 +1,5 @@
-const { EventEmitter } = require('events');
-const ee = new EventEmitter();
-
 module.exports = {
-	createServer(serverName, io) {
+	createServer(io, serverName) {
 		io.of(serverName).on('connection', nsp => {
 			console.log('connected');
 			nsp.on('messageSend', data => {

@@ -4,8 +4,8 @@ let _DB;
 
 const connectDB = async callback => {
 	try {
-		MongoClient.connect(URI, { useNewUrlParser: true }, (err, db) => {
-			_DB = db;
+		MongoClient.connect(URI, { useNewUrlParser: true }, (err, client) => {
+			_DB = client.db('Chat-app');
 			return callback(err);
 		});
 	} catch (e) {
