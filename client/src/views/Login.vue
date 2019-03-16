@@ -16,8 +16,7 @@ export default {
 	},
 	methods: {
 		login: async function() {
-			const user = await this.axios.post('http://localhost:3000/api/users/login', { username: this.username, password: this.password })
-			this.$connectServers(user.data.memberOf)
+			await this.$store.dispatch('login', { username: this.username, password: this.password } )
 		}
 	}
 }

@@ -14,18 +14,12 @@ export default {
     };
   },
   methods: {
-    message() {
-      this.$sendMessage("moje message");
-    },
     async create() {
       try {
-        await this.axios.post("http://localhost:3000/api/servers/new-server", {
-          serverName: this.serverName
-        });
-        this.$addServer(this.serverName);
+        await this.$store.dispatch("createServer", this.serverName);
       } catch (error) {
-				console.log(error.response.data.error)
-			}
+        console.log(error.response.data.error);
+      }
     }
   }
 };

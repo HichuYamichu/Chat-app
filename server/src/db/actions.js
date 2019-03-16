@@ -11,8 +11,8 @@ module.exports = {
 	checkUserNames(userName) {
 		return db.collection('users').findOne({ username: userName });
 	},
-	async insertUser(user) {
-		await db.collection('users').insertOne(user);
+	insertUser(user) {
+		return db.collection('users').insertOne(user);
 	},
 	retriveUser(user) {
 		return db.collection('users').findOne(user);

@@ -5,9 +5,9 @@ const newServerHandler = require('../handlers/newServer');
 
 
 router.post('/new-server', async (req, res) => {
-	newServerController(req, res);
-	console.log('fsdfds');
-	newServerHandler(req, res);
+	const error = await newServerController(req, res);
+	if (error) return res.status(400).send(error);
+	await newServerHandler(req, res);
 });
 
 module.exports = router;

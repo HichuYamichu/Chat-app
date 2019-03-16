@@ -16,7 +16,7 @@ export default {
 	},
 	methods: {
 		register: function() {
-			this.axios.post('http://localhost:3000/api/users/register', { username: this.username, password: this.password })
+			this.$store.dispatch('register', { username: this.username, password: this.password })
 		}
 	}
 }
