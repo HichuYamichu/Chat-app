@@ -4,30 +4,38 @@ import _Server from './views/Server'
 import Register from './views/Register'
 import Login from './views/Login'
 import Dashboard from './views/Dashboard'
+import store from './store/index'
 
 Vue.use(Router)
 
 export default new Router({
-  routes: [
+	routes: [
 		{
-      path: '/login',
-      name: 'Login',
-      component: Login
-    },
+			path: '/login',
+			name: 'Login',
+			component: Login
+		},
 		{
-      path: '/register',
-      name: 'Register',
-      component: Register
-    },
+			path: '/register',
+			name: 'Register',
+			component: Register
+		},
 		{
-      path: '/servers/:serverName',
-      name: 'Server',
-      component: _Server
-    },
+			path: '/servers/:serverName',
+			name: 'Server',
+			component: _Server,
+			beforeEnter: (to, from, next) => {
+				if (!store.state.user) {
+					next('/')
+				} else {
+					next()
+				}
+			}
+		},
 		{
-      path: '/dashboard',
-      name: 'Dashboard',
-      component: Dashboard
-    },
-  ]
+			path: '/dashboard',
+			name: 'Dashboard',
+			component: Dashboard
+		},
+	]
 })

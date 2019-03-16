@@ -3,6 +3,9 @@
     <h1>{{ $route.params.serverName }}</h1>
     <input type="text" placeholder="message" v-model="message">
     <button @click="sendMessage">Send Message</button>
+		<div class="chat">
+			<span v-for="(message, index) in messages" :key="index">{{ message }}</span>
+		</div>
   </div>
 </template>
 
@@ -11,7 +14,8 @@ export default {
   data() {
     return {
       serverNamespace: null,
-      message: ""
+      message: "",
+			messages: []
     };
   },
   watch: {
@@ -19,19 +23,19 @@ export default {
       this.init()
     }
   },
-  created() {
+  mounted() {
     this.init();
   },
   methods: {
     init: function() {
       const serverName = this.$route.params.serverName;
-			console.log(serverName)
       this.serverNamespace = this.$store.state.servers[serverName];
       this.serverNamespace.on("connect", data => {
         console.log("connected");
       });
 
       this.serverNamespace.on("messageRecived", data => {
+				this.messages.push(data)
         console.log(data);
       });
     },
@@ -42,5 +46,10 @@ export default {
 };
 </script>
 
-<style>
+<style scaped>
+	.chat {
+		height: 400px;
+		width: 400px;
+		border: 4px solid black;	
+	}
 </style>
