@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<input type="text" v-model="userName" placeholder="username">
+		<input type="text" v-model="username" placeholder="username">
 		<input type="password" v-model="password" placeholder="password">
 		<button @click="login">Login</button>
 	</div>
@@ -10,14 +10,14 @@
 export default {
 	data() {
 		return {
-			userName: '',
+			username: '',
 			password: ''
 		}
 	},
 	methods: {
-		login: function() {
-			const user = this.$axios.post('http://localhost:3000/api/login', { userName: this.userName, password: this.password })
-			this.$connectServers(user.memberOf)
+		login: async function() {
+			const user = await this.axios.post('http://localhost:3000/api/users/login', { username: this.username, password: this.password })
+			this.$connectServers(user.data.memberOf)
 		}
 	}
 }

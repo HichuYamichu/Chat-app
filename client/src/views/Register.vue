@@ -10,13 +10,13 @@
 export default {
 	data() {
 		return {
-			userName: '',
+			username: '',
 			password: ''
 		}
 	},
 	methods: {
 		register: function() {
-			tihs.$axios.post('http://localhost:3000/api/register', { userName: this.userName, password: this.password })
+			this.axios.post('http://localhost:3000/api/users/register', { username: this.username, password: this.password })
 		}
 	}
 }

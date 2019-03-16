@@ -5,12 +5,13 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    servers: null,
+    servers: {},
   },
 
   mutations:{
-    UPDATE_SERVERS(state, servers) {
-			state.servers = servers
+    UPDATE_SERVERS(state, namespace, serverName) {
+			state.servers[namespace.nsp.substring(1)] = namespace
+			console.log(state.servers);
 		}
   }
 })

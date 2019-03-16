@@ -19,7 +19,7 @@ export default {
     },
     async create() {
       try {
-        await this.axios.post("http://localhost:3000/api/new-server", {
+        await this.axios.post("http://localhost:3000/api/servers/new-server", {
           serverName: this.serverName
         });
         this.$addServer(this.serverName);

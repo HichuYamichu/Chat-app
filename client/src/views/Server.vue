@@ -25,6 +25,7 @@ export default {
   methods: {
     init: function() {
       const serverName = this.$route.params.serverName;
+			console.log(serverName)
       this.serverNamespace = this.$store.state.servers[serverName];
       this.serverNamespace.on("connect", data => {
         console.log("connected");

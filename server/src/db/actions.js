@@ -1,17 +1,20 @@
+const MongoDB = require('../db/index');
+const db = MongoDB.getDB();
+
 module.exports = {
-	checkServerNames(db, serverName) {
+	checkServerNames(serverName) {
 		return db.collection('servers').findOne({ serverName: serverName });
 	},
-	async createServer(db, serverData) {
+	async createServer(serverData) {
 		await db.collection('servers').insertOne(serverData);
 	},
-	checkUserNames(db, userName) {
-		return db.collection('users').findOne({ userName: userName });
+	checkUserNames(userName) {
+		return db.collection('users').findOne({ username: userName });
 	},
-	async insertUser(db, user) {
+	async insertUser(user) {
 		await db.collection('users').insertOne(user);
 	},
-	retriveUser(db, user) {
+	retriveUser(user) {
 		return db.collection('users').findOne(user);
 	}
 };
