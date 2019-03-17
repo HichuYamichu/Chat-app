@@ -1,7 +1,6 @@
 <template>
   <nav>
-    <v-toolbar flat app dark class="primary">
-      <v-toolbar-side-icon v-if="$store.getters.user" @click="drawer = !drawer"></v-toolbar-side-icon>
+    <v-toolbar flat app clipped-left dark class="primary">
       <v-toolbar-title>Chat-app</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-toolbar-items class="hidden-sm-and-down">
@@ -12,7 +11,7 @@
       </v-toolbar-items>
     </v-toolbar>
 
-    <v-navigation-drawer v-if="$store.getters.user" mini-variant app v-model="drawer">
+    <v-navigation-drawer app fixed clipped v-if="$store.getters.user" mini-variant permament>
       <v-toolbar flat class="transparent">
         <v-list class="pa-0">
           <v-list-tile avatar v-for="(server, index) in $store.getters.user.memberOf" :key="index">
