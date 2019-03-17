@@ -12,10 +12,11 @@ const servers = {
 		},
 	},
 	actions: { 
-		async createServer({ commit }, serverName) {
+		async createServer({ commit, rootState  }, serverName) {
 			try {
 				await axios.post("http://localhost:3000/api/servers/new-server", {
-					serverName: serverName
+					serverName: serverName,
+					owner: rootState.user.user.username
 				});
 				const namespace = Vue.$addServer(serverName);
 				commit('UPDATE_SERVERS', namespace);
@@ -24,6 +25,9 @@ const servers = {
 			}
 		},
 	 },
+	getters: {
+		servers: state => state.servers
+	 }
 }
 
 export default servers

@@ -10,6 +10,9 @@ const user = {
 	mutations: {
 		SET_USER(state, user) {
 			state.user = user
+		},
+		LOGOUT(state, user) {
+			state.user = null
 		}
 	},
 	actions: {
@@ -20,16 +23,17 @@ const user = {
 		},
 		async login({ commit }, credentials) {
 			const user = await axios.post('http://localhost:3000/api/users/login', { username: credentials.username, password: credentials.password })
-			user.data.memberOf.forEach(serv => console.log(serv));
 			user.data.memberOf.forEach(addServer => {
 				const namespace = Vue.$addServer(addServer)
 				commit('UPDATE_SERVERS', namespace, { root: true });
 			});
 			commit('SET_USER', user.data);
+		},
+		async logout({ commit }) {
+			commit('LOGOUT')
 		}
 	},
-	getters: { 
-		userServers: state => state.user.memberOf,
+	getters: {
 		user: state => state.user
 	 }
 }

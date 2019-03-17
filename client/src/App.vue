@@ -1,7 +1,11 @@
 <template>
   <v-app>
-    <page-header app />
-    <router-view></router-view>
+    <page-header app class/>
+    <v-content>
+      <v-container fluid>
+        <router-view></router-view>
+      </v-container>
+    </v-content>
   </v-app>
 </template>
 
@@ -16,12 +20,16 @@ export default {
 </script>
 
 
-<style>
+<style lang="stylus">
 #app {
-  font-family: "Roboto", sans-serif;
+  font-family: 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+}
+
+html {
+  overflow-y: auto;
 }
 </style>

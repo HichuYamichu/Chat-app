@@ -3,7 +3,7 @@ import Router from 'vue-router'
 import _Server from './views/Server'
 import Register from './views/Register'
 import Login from './views/Login'
-import Dashboard from './views/Dashboard'
+import NewServerForm from './views/NewServerForm'
 import store from './store/index'
 
 Vue.use(Router)
@@ -25,7 +25,7 @@ export default new Router({
 			name: 'Server',
 			component: _Server,
 			beforeEnter: (to, from, next) => {
-				if (!store.state.user) {
+				if (!store.getters.user) {
 					next('/')
 				} else {
 					next()
@@ -33,9 +33,16 @@ export default new Router({
 			}
 		},
 		{
-			path: '/dashboard',
-			name: 'Dashboard',
-			component: Dashboard
+			path: '/new',
+			name: 'NewServerForm',
+			component: NewServerForm,
+			beforeEnter: (to, from, next) => {
+				if (!store.getters.user) {
+					next('/')
+				} else {
+					next()
+				}
+			}
 		},
 	]
 })
