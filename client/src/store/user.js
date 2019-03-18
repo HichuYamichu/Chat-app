@@ -1,6 +1,4 @@
 import axios from 'axios'
-import Vue from 'vue';
-
 
 const user = {
 	state: {
@@ -21,13 +19,10 @@ const user = {
 			commit('SET_USER', user.data);
 
 		},
-		async login({ commit }, credentials) {
-			const user = await axios.post('http://localhost:3000/api/users/login', { username: credentials.username, password: credentials.password })
-			user.data.memberOf.forEach(addServer => {
-				const namespace = Vue.$addServer(addServer)
-				commit('UPDATE_SERVERS', namespace, { root: true });
-			});
-			commit('SET_USER', user.data);
+		async login({ commit, dispatch }, credentials) {
+			const res = await axios.post('http://localhost:3000/api/users/login', { username: credentials.username, password: credentials.password })
+			commit('SET_USER', res.data.user);
+			dispatch('handleLogin', res.data.servers, { root: true })
 		},
 		async logout({ commit }) {
 			commit('LOGOUT')

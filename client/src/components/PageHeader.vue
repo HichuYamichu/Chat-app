@@ -14,7 +14,7 @@
     <v-navigation-drawer app fixed clipped v-if="$store.getters.user" mini-variant permament>
       <v-toolbar flat class="transparent">
         <v-list class="pa-0">
-          <v-list-tile avatar v-for="(server, index) in $store.getters.user.memberOf" :key="index">
+          <v-list-tile avatar v-for="(server, index) in $store.getters.servers" :key="index">
             <v-btn fab icon block small @click="go(server)">
               <v-avatar>
                 <img src="https://randomuser.me/api/portraits/men/85.jpg">
@@ -39,8 +39,8 @@ export default {
       this.$store.dispatch("logout");
 			this.$router.push('/')
     },
-		go: function(server) {
-			this.$router.push({ path: `/servers/${server}`})
+		go: function(server, index) {
+			this.$router.push({ path: `/servers/${server.serverName}`})
 		}
   }
 };

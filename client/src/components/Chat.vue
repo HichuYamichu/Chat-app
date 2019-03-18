@@ -1,6 +1,6 @@
 <template>
   <v-card class="pa-2">
-    <h1>{{ this.$route.params.serverName }}</h1>
+    <h3 class="display-2">{{ this.$route.params.serverName }}</h3>
     <v-layout row wrap justify-space-around fill-height>
       <v-flex xs12 class="chats">
         <simplebar data-simplebar-auto-hide="false">
@@ -22,13 +22,13 @@ import simplebar from "simplebar-vue";
 import "simplebar/dist/simplebar.min.css";
 
 export default {
+  props: ["serverName"],
   components: {
     MessageBlock,
     simplebar
   },
   data() {
     return {
-      serverNamespace: null,
       message: {
         author: this.$store.getters.user.username,
         content: ""
@@ -36,30 +36,36 @@ export default {
       messages: []
     };
   },
-  watch: {
-    $route(to, from) {
-      this.$forceUpdate();
+  computed: {
+    serverNamespace: function() {
+      return this.$store.getters.activeServer(this.serverName).namespace;
+    },
+    activeChannel: function() {
+      return this.$store.getters.activeServer(this.serverName).activeChannel;
+    },
+    allChannels: function() {
+      return this.$store.getters.activeServer(this.serverName).channels;
     }
   },
   created() {
-    this.init();
+    this.serverNamespace.on("connect", data => {
+      console.log("connected");
+    });
+
+    this.serverNamespace.emit("init", this.allChannels.map(channel => channel.channelName));
+
+    this.serverNamespace.on("messageRecived", data => {
+      
+      this.messages.push(data);
+    });
   },
   methods: {
-    init: function() {
-      const serverName = this.$route.params.serverName;
-      this.serverNamespace = this.$store.getters.servers[serverName];
-      this.serverNamespace.on("connect", data => {
-        console.log("connected");
-      });
-
-      this.serverNamespace.on("messageRecived", data => {
-        this.messages.push(data);
-      });
-      console.log(this.serverNamespace);
-    },
     sendMessage: function() {
       if (this.message.content == "") return;
-      this.serverNamespace.emit("messageSend", this.message);
+      this.serverNamespace.emit("messageSend", {
+        channel: this.activeChannel,
+        message: this.message
+      });
       this.message.content = "";
     }
   }
