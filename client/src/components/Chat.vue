@@ -5,7 +5,7 @@
       <v-flex xs12 class="chats">
         <simplebar data-simplebar-auto-hide="false">
           <v-list>
-            <message-block v-for="(message, index) in messages" :key="index" :message="message"/>
+            <message-block v-for="(message, index) in activeChannel.messages" :key="index" :message="message"/>
           </v-list>
         </simplebar>
       </v-flex>
@@ -41,7 +41,7 @@ export default {
       return this.$store.getters.activeServer(this.serverName).namespace;
     },
     activeChannel: function() {
-      return this.$store.getters.activeServer(this.serverName).activeChannel;
+      return this.$store.getters.activeChannel(this.serverName);
     },
     allChannels: function() {
       return this.$store.getters.activeServer(this.serverName).channels;
@@ -55,7 +55,9 @@ export default {
     this.serverNamespace.emit("init", this.allChannels.map(channel => channel.channelName));
 
     this.serverNamespace.on("messageRecived", data => {
-      
+      this.activeChannel.channelName
+      console.log(this.$store)
+      this.$store.dispatch('messageRecived', { serverName: this.serverName, activeChannel: this.activeChannel,  message: data})
       this.messages.push(data);
     });
   },
@@ -63,7 +65,7 @@ export default {
     sendMessage: function() {
       if (this.message.content == "") return;
       this.serverNamespace.emit("messageSend", {
-        channel: this.activeChannel,
+        channel: this.activeChannel.channelName,
         message: this.message
       });
       this.message.content = "";
