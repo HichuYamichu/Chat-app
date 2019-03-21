@@ -1,12 +1,19 @@
 <template>
-  <v-layout row justify-space-around>
-    <v-flex xs1>
-      <channel-list :serverName="serverName"/>
-    </v-flex>
-    <v-flex xs10>
-      <chat :key="serverName" :serverName="serverName"/>
-    </v-flex>
-  </v-layout>
+  <v-card class="pb-1">
+    <v-layout row wrap justify-space-between>
+      <v-flex xs12 class="mb-2">
+        <v-toolbar card flat color="secondary">
+          <v-toolbar-title>{{ serverName }}</v-toolbar-title>
+        </v-toolbar>
+      </v-flex>
+      <v-flex xs3 sm2 md2 lg1>
+        <channel-list :serverName="serverName"/>
+      </v-flex>
+      <v-flex xs7 sm9 md10 lg11>
+        <chat :key="serverName" :serverName="serverName"/>
+      </v-flex>
+    </v-layout>
+  </v-card>
 </template>
 
 <script>

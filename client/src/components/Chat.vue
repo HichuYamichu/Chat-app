@@ -1,11 +1,14 @@
 <template>
-  <v-card class="pa-2">
-    <h3 class="display-2">{{ this.$route.params.serverName }}</h3>
-    <v-layout row wrap justify-space-around fill-height>
+  <div class="chat">
+    <v-layout row wrap justify-space-around>
       <v-flex xs12 class="chats">
         <simplebar data-simplebar-auto-hide="false">
           <v-list>
-            <message-block v-for="(message, index) in activeChannel.messages" :key="index" :message="message"/>
+            <message-block
+              v-for="(message, index) in activeChannel.messages"
+              :key="index"
+              :message="message"
+            />
           </v-list>
         </simplebar>
       </v-flex>
@@ -13,7 +16,7 @@
         <v-text-field v-on:keyup.enter="sendMessage" outline v-model="message.content"></v-text-field>
       </v-flex>
     </v-layout>
-  </v-card>
+  </div>
 </template>
 
 <script>
@@ -52,12 +55,19 @@ export default {
       console.log("connected");
     });
 
-    this.serverNamespace.emit("init", this.allChannels.map(channel => channel.channelName));
+    this.serverNamespace.emit(
+      "init",
+      this.allChannels.map(channel => channel.channelName)
+    );
 
     this.serverNamespace.on("messageRecived", data => {
-      this.activeChannel.channelName
-      console.log(this.$store)
-      this.$store.dispatch('messageRecived', { serverName: this.serverName, activeChannel: this.activeChannel,  message: data})
+      this.activeChannel.channelName;
+      console.log(this.$store);
+      this.$store.dispatch("messageRecived", {
+        serverName: this.serverName,
+        activeChannel: this.activeChannel,
+        message: data
+      });
       this.messages.push(data);
     });
   },
@@ -75,6 +85,10 @@ export default {
 </script>
 
 <style scaped>
+.chat {
+  border-left: 1px solid lightgray;
+}
+
 .typer {
   position: absolute;
   bottom: 0;

@@ -1,12 +1,12 @@
 <template>
-  <v-layout column>
-    <v-flex>
-      <h3 class="dispay-3">Channels</h3>
-    </v-flex>
-    <v-flex v-for="(channel, index) in $store.getters.servers[serverName].channels" :key="index">
+  <v-list>
+    <v-list-tile-title class="text-xs-center headline mb-2">
+      Channels
+    </v-list-tile-title >
+    <v-list-tile v-for="(channel, index) in $store.getters.servers[serverName].channels" :key="index">
       <v-btn block flat outline @click="changeChannel(channel.channelName)">{{ channel.channelName }}</v-btn>
-    </v-flex>
-  </v-layout>
+    </v-list-tile>
+  </v-list>
 </template>
 
 <script>

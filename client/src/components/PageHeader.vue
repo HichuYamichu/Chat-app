@@ -11,7 +11,7 @@
       </v-toolbar-items>
     </v-toolbar>
 
-    <v-navigation-drawer app fixed clipped v-if="$store.getters.user" mini-variant permament>
+    <!-- <v-navigation-drawer app fixed clipped v-if="$store.getters.user" mini-variant permament disable-resize-watcher touchless hide-overlay>
       <v-toolbar flat class="transparent">
         <v-list class="pa-0">
           <v-list-tile avatar v-for="(server, index) in $store.getters.servers" :key="index">
@@ -23,7 +23,7 @@
           </v-list-tile>
         </v-list>
       </v-toolbar>
-    </v-navigation-drawer>
+    </v-navigation-drawer> -->
   </nav>
 </template>
 

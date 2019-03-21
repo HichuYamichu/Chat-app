@@ -17,7 +17,7 @@ Vue.use(Vuetify, {
 	iconfont: 'md',
   theme: {
     primary: colors.indigo.base, 
-    secondary: colors.red.lighten4,
+    secondary: colors.grey.lighten3,
   }
 })
 
