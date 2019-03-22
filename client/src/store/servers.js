@@ -12,11 +12,18 @@ const servers = {
     SET_SERVERS(state, servers) {
       state.servers = servers;
     },
+    CLEAR_SERVERS(state) {
+      state.servers = {}
+    },
     CHANGE_ACTIVECHANNEL(state, payload) {
       state.servers[payload.serverName].activeChannel = payload.channelName;
     },
     MESSAGE_RECIVED(state, payload) {
       payload.channel.messages.push(payload.message);
+    },
+    APPEND_MESSAGES(state, payload) {
+      console.log(payload.messages);
+
     }
   },
   actions: {
@@ -40,16 +47,32 @@ const servers = {
         throw error;
       }
     },
-    async handleLogin({ commit }, servers) {
+    async handleLogin({ commit, dispatch }, servers) {
       Object.keys(servers).forEach(server => {
         servers[server].namespace = Vue.$addServer(server);
         servers[server].activeChannel = 'main';
+        servers[server].namespace.emit(
+          'init',
+          servers[server].channels.map(channel => channel.channelName)
+        );
+
+        servers[server].namespace.on('messageRecived', data => {
+          dispatch('messageRecived', { serverName: server, message: data });
+        });
+
+        servers[server].namespace.on('fetchedMessages', data => {
+          dispatch('fetchedMessages', { serverName: server, messages: data });
+        });
       });
       commit('SET_SERVERS', servers);
     },
     messageRecived({ commit, getters }, payload) {
       const channel = getters.activeChannel(payload.serverName);
       commit('MESSAGE_RECIVED', { channel, message: payload.message });
+    },
+    fetchedMessages({ commit, getters }, payload) {
+      const channel = getters.activeChannel(payload.serverName);
+      commit('APPEND_MESSAGES', { channel, messages: payload.messages });
     }
   },
   getters: {

@@ -26,6 +26,7 @@ const user = {
 		},
 		async logout({ commit }) {
 			commit('LOGOUT')
+			commit('CLEAR_SERVERS', null, { root: true })
 		}
 	},
 	getters: {

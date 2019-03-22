@@ -4,6 +4,7 @@ import _Server from './views/Server'
 import Register from './views/Register'
 import Login from './views/Login'
 import NewServerForm from './views/NewServerForm'
+import test from './views/test'
 import store from './store/index'
 
 Vue.use(Router)
@@ -11,6 +12,11 @@ Vue.use(Router)
 export default new Router({
 	mode: 'history',
 	routes: [
+		{
+			path: '/test',
+			name: 'test',
+			component: test
+		},
 		{
 			path: '/login',
 			name: 'Login',

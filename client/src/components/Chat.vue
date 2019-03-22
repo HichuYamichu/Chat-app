@@ -1,16 +1,14 @@
 <template>
   <div class="chat">
     <v-layout row wrap justify-space-around>
-      <v-flex xs12 class="chats">
-        <simplebar data-simplebar-auto-hide="false">
-          <v-list>
-            <message-block
-              v-for="(message, index) in activeChannel.messages"
-              :key="index"
-              :message="message"
-            />
-          </v-list>
-        </simplebar>
+      <v-flex xs12 class="chats" v-scroll="onScroll" id="style-1">
+        <v-list v-scroll="onScroll">
+          <message-block
+            v-for="(message, index) in activeChannel.messages"
+            :key="index"
+            :message="message"
+          />
+        </v-list>
       </v-flex>
       <v-flex xs11 class="mt-3">
         <v-text-field v-on:keyup.enter="sendMessage" outline v-model="message.content"></v-text-field>
@@ -21,22 +19,18 @@
 
 <script>
 import MessageBlock from "../components/Message";
-import simplebar from "simplebar-vue";
-import "simplebar/dist/simplebar.min.css";
 
 export default {
   props: ["serverName"],
   components: {
     MessageBlock,
-    simplebar
   },
   data() {
     return {
       message: {
         author: this.$store.getters.user.username,
         content: ""
-      },
-      messages: []
+      }
     };
   },
   computed: {
@@ -50,41 +44,45 @@ export default {
       return this.$store.getters.activeServer(this.serverName).channels;
     }
   },
-  created() {
-    this.serverNamespace.on("connect", data => {
-      console.log("connected");
-    });
-
-    this.serverNamespace.emit(
-      "init",
-      this.allChannels.map(channel => channel.channelName)
-    );
-
-    this.serverNamespace.on("messageRecived", data => {
-      this.activeChannel.channelName;
-      console.log(this.$store);
-      this.$store.dispatch("messageRecived", {
-        serverName: this.serverName,
-        activeChannel: this.activeChannel,
-        message: data
-      });
-      this.messages.push(data);
-    });
-  },
   methods: {
     sendMessage: function() {
       if (this.message.content == "") return;
+      this.message.date = Date.now();
       this.serverNamespace.emit("messageSend", {
         channel: this.activeChannel.channelName,
         message: this.message
       });
       this.message.content = "";
+    },
+    onScroll: function(e) {
+      if (e.target.scrollTop !== 0) return
+      this.serverNamespace.emit('fetchMessages', {
+        channel: this.activeChannel.channelName,
+        lastMesssageIndex: this.activeChannel.messages.length
+      })
     }
   }
 };
 </script>
 
-<style scaped>
+<style scoped>
+#style-1::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  background-color: #f5f5f5;
+}
+
+#style-1::-webkit-scrollbar {
+  width: 7px;
+  background-color: #f5f5f5;
+}
+
+#style-1::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 6px rgba(78, 78, 78, 0.3);
+  background-color: #555;
+}
+
 .chat {
   border-left: 1px solid lightgray;
 }
@@ -98,10 +96,9 @@ export default {
 
 .chats {
   height: 70vh;
-}
-
-.simplebar-content {
+  overflow: auto;
   display: flex;
   flex-direction: column-reverse;
 }
+
 </style>

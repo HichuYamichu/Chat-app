@@ -7,6 +7,7 @@ import './registerServiceWorker'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 import Vuetify from 'vuetify'
+import vuescroll from 'vue-scroll'
 import 'vuetify/dist/vuetify.min.css'
 import 'material-design-icons-iconfont/dist/material-design-icons.css'
 
@@ -20,11 +21,12 @@ Vue.use(Vuetify, {
     secondary: colors.grey.lighten3,
   }
 })
-
-Vue.config.productionTip = false
- 
 Vue.use(socket)
 Vue.use(VueAxios, axios)
+Vue.use(vuescroll)
+
+Vue.config.productionTip = false
+
 
 
 new Vue({

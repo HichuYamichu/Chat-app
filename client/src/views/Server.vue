@@ -3,7 +3,9 @@
     <v-layout row wrap justify-space-between>
       <v-flex xs12 class="mb-2">
         <v-toolbar card flat color="secondary">
-          <v-toolbar-title>{{ serverName }}</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-toolbar-title class="font-weight-medium display-1">{{ serverName }}</v-toolbar-title>
+          <v-spacer></v-spacer>
         </v-toolbar>
       </v-flex>
       <v-flex xs3 sm2 md2 lg1>

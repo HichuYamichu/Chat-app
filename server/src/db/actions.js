@@ -41,10 +41,33 @@ module.exports = {
     const userServers = {};
     const servers = await db
       .collection('servers')
-      .find({ _id: { $in: user.memberOf } }, { projection: { _id: false } }).toArray();
+      .find(
+        { _id: { $in: user.memberOf } },
+        { projection: { _id: false, 'channels.messages': { $slice: -15 } } }
+      )
+      .toArray();
     servers.forEach(server => {
       userServers[server.serverName] = server;
     });
     return { user: user, servers: userServers };
+  },
+  async insertMessage(serverName, channelName, message) {
+    await db.collection('servers').updateOne(
+      {
+        serverName: serverName,
+        channels: { $elemMatch: { channelName: channelName } }
+      },
+      { $push: { 'channels.$.messages': message } }
+    );
+  },
+  fetchMessages(serverName, channelName, lastMesssageIndex) {
+    console.log(lastMesssageIndex);
+    return db.collection('servers').findOne(
+      {
+        serverName: serverName,
+        channels: { $elemMatch: { channelName: channelName } }
+      },
+      { projection: { _id: false, 'channels.0.messages.$[]': true } }
+    );
   }
 };
