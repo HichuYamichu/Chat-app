@@ -1,6 +1,10 @@
 const Database = require('../db/actions');
+const bcrypt = require('bcrypt');
 
 module.exports = async (req, res) => {
-	const user = await Database.insertUser(req.body);
-	res.send(user.ops[0]);
+  bcrypt.hash(req.body.password, 10, async (err, hash) => {
+    if (err) throw err;
+    const user = await Database.insertUser({ username: req.body.username, password: hash, memberOf: [] });
+    res.send(user.ops[0]);
+  });
 };

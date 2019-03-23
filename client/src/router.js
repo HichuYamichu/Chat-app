@@ -12,6 +12,18 @@ Vue.use(Router)
 export default new Router({
 	mode: 'history',
 	routes: [
+    {
+			path: '/',
+			name: 'Chat-app',
+			component: test,
+			beforeEnter: (to, from, next) => {
+				if (!store.getters.user) {
+					next('/login')
+				} else {
+					next()
+				}
+			}
+		},
 		{
 			path: '/test',
 			name: 'test',
@@ -33,7 +45,7 @@ export default new Router({
 			component: _Server,
 			beforeEnter: (to, from, next) => {
 				if (!store.getters.user) {
-					next('/')
+					next('/login')
 				} else {
 					next()
 				}
@@ -45,7 +57,7 @@ export default new Router({
 			component: NewServerForm,
 			beforeEnter: (to, from, next) => {
 				if (!store.getters.user) {
-					next('/')
+					next('/login')
 				} else {
 					next()
 				}

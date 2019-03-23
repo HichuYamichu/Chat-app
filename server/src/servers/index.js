@@ -32,6 +32,7 @@ module.exports = {
       });
 
       nsp.on('createChannel', data => {
+        console.log(data);
         nsp.join(data);
       });
     });

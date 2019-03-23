@@ -34,10 +34,15 @@ module.exports = {
   insertUser(user) {
     return db.collection('users').insertOne(user);
   },
-  async retriveUserAndServers(userObj) {
+  getPasswordHash(username) {
+    return db
+      .collection('users')
+      .findOne({ username }, { projection: { _id: false, password: true } });
+  },
+  async retriveUserAndServers(username) {
     const user = await db
       .collection('users')
-      .findOne(userObj, { projection: { _id: false } });
+      .findOne({ username }, { projection: { _id: false, password: false } });
     const userServers = {};
     const servers = await db
       .collection('servers')
@@ -68,6 +73,8 @@ module.exports = {
       },
       { projection: { '_id': false, 'channels.$': { $slice: 15 } } }
     );
-    return res.channels[0].messages.filter(message => message.date < lastMesssageIndex);
+    return res.channels[0].messages.filter(
+      message => message.date < lastMesssageIndex
+    );
   }
 };
