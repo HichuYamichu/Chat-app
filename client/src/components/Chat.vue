@@ -19,6 +19,7 @@
 
 <script>
 import MessageBlock from "../components/Message";
+import _ from "lodash.throttle";
 
 export default {
   props: ["serverName"],
@@ -58,7 +59,7 @@ export default {
       if (e.target.scrollTop !== 0) return
       this.serverNamespace.emit('fetchMessages', {
         channel: this.activeChannel.channelName,
-        lastMesssageIndex: this.activeChannel.messages.length
+        lastMesssageIndex: this.activeChannel.messages[0].date
       })
     }
   }

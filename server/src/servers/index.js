@@ -1,12 +1,14 @@
 module.exports = {
-  createServer(serverName) {
-    // ADD FOREACH TO INIT ROOMS
+  createServer(serverName, channelNames) {
     const io = require('../server').io();
     const Database = require('../db/actions');
 
     io.of(serverName).on('connection', nsp => {
       console.log('connected');
-      nsp.join('main');
+      channelNames.forEach(channelName => {
+        nsp.join(channelName);
+      });
+
       nsp.on('messageSend', data => {
         Database.insertMessage(serverName, data.channel, data.message);
         io.of(serverName)
@@ -15,8 +17,11 @@ module.exports = {
       });
 
       nsp.on('fetchMessages', async data => {
-        const messages = await Database.fetchMessages(serverName, data.channel, data.lastMesssageIndex);
-        console.log(messages);
+        const messages = await Database.fetchMessages(
+          serverName,
+          data.channel,
+          data.lastMesssageIndex
+        );
         nsp.emit('fetchedMessages', messages);
       });
 

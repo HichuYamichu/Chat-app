@@ -24,9 +24,9 @@ const user = {
 			commit('SET_USER', res.data.user);
 			dispatch('handleLogin', res.data.servers, { root: true })
 		},
-		async logout({ commit }) {
+		async logout({ commit, dispatch }) {
 			commit('LOGOUT')
-			commit('CLEAR_SERVERS', null, { root: true })
+			dispatch('disconnectSockets', null, { root: true })
 		}
 	},
 	getters: {

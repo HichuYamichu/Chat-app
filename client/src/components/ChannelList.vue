@@ -1,10 +1,16 @@
 <template>
   <v-list>
-    <v-list-tile-title class="text-xs-center headline mb-2">
-      Channels
-    </v-list-tile-title >
-    <v-list-tile v-for="(channel, index) in $store.getters.servers[serverName].channels" :key="index">
-      <v-btn block flat outline @click="changeChannel(channel.channelName)">{{ channel.channelName }}</v-btn>
+    <v-list-tile-title class="text-xs-center headline mb-2">Channels</v-list-tile-title>
+    <v-list-tile
+      v-for="(channel, index) in $store.getters.servers[serverName].channels"
+      :key="index"
+    >
+      <v-btn
+        block
+        flat
+        outline
+        @click="changeChannel(channel.channelName)"
+      >{{ channel.channelName }}</v-btn>
     </v-list-tile>
   </v-list>
 </template>
@@ -23,5 +29,8 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
+.active {
+  background-color: black !important;
+}
 </style>

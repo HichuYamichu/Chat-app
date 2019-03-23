@@ -21,7 +21,7 @@ MongoDB.connectDB(async err => {
     .find()
     .toArray();
   savedServers.forEach(savedServer => {
-    Servers.createServer(savedServer.serverName);
+    Servers.createServer(savedServer.serverName, savedServer.channels.map(channel => channel.channelName));
   });
 
   server.listen(process.env.HOST || 3000, () => {

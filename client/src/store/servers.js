@@ -22,8 +22,7 @@ const servers = {
       payload.channel.messages.push(payload.message);
     },
     APPEND_MESSAGES(state, payload) {
-      console.log(payload.messages);
-
+      payload.channel.messages.unshift(...payload.messages)
     }
   },
   actions: {
@@ -73,6 +72,10 @@ const servers = {
     fetchedMessages({ commit, getters }, payload) {
       const channel = getters.activeChannel(payload.serverName);
       commit('APPEND_MESSAGES', { channel, messages: payload.messages });
+    },
+    disconnectSockets({ commit, getters }) {
+      Vue.$destroySockets(getters.servers)
+      commit('CLEAR_SERVERS')
     }
   },
   getters: {

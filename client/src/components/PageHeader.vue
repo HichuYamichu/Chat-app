@@ -10,20 +10,6 @@
         <v-btn v-if="$store.getters.user" block flat @click="logout">Logout</v-btn>
       </v-toolbar-items>
     </v-toolbar>
-
-    <!-- <v-navigation-drawer app fixed clipped v-if="$store.getters.user" mini-variant permament disable-resize-watcher touchless hide-overlay>
-      <v-toolbar flat class="transparent">
-        <v-list class="pa-0">
-          <v-list-tile avatar v-for="(server, index) in $store.getters.servers" :key="index">
-            <v-btn fab icon block small @click="go(server)">
-              <v-avatar>
-                <img src="https://randomuser.me/api/portraits/men/85.jpg">
-              </v-avatar>
-            </v-btn>
-          </v-list-tile>
-        </v-list>
-      </v-toolbar>
-    </v-navigation-drawer> -->
   </nav>
 </template>
 
