@@ -4,12 +4,12 @@ module.exports = {
     const Database = require('../db/actions');
 
     io.of(serverName).on('connection', nsp => {
-      console.log('connected');
       channelNames.forEach(channelName => {
         nsp.join(channelName);
       });
 
       nsp.on('messageSend', data => {
+        console.log(nsp.handshake.session);
         Database.insertMessage(serverName, data.channel, data.message);
         io.of(serverName)
           .in(data.channel)
