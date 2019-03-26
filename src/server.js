@@ -1,12 +1,12 @@
 const app = require('express')();
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
-const server = require('http').Server(app);
 const MongoDB = require('./db/index');
-const Servers = require('./servers/index');
-const io = require('socket.io')(server);
+const SocketHandler = require('./socket/index');
 const sharedsession = require('express-socket.io-session');
 const handshake = require('socket.io-handshake');
 
@@ -44,7 +44,7 @@ MongoDB.connectDB(async err => {
     .find()
     .toArray();
   savedServers.forEach(savedServer => {
-    Servers.createServer(
+    SocketHandler.createServer(
       savedServer.serverName,
       savedServer.channels.map(channel => channel.channelName)
     );

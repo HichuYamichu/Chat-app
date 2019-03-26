@@ -48,7 +48,7 @@ module.exports = {
       .collection('servers')
       .find(
         { _id: { $in: user.memberOf } },
-        { projection: { _id: false, 'channels.messages': { $slice: -15 } } }
+        { projection: { '_id': false, 'channels.messages': { $slice: -15 } } }
       )
       .toArray();
     servers.forEach(server => {

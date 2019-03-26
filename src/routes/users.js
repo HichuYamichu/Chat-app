@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const registerController = require('../controllers/registerController');
-const registerHandler = require('../handlers/userRegister');
+const registerHandler = require('../handlers/userRegisterHandler');
 const loginConroller = require('../controllers/loginController');
-const loginHandler = require('../handlers/userLogin');
+const loginHandler = require('../handlers/userLoginHandler');
 
 router.post('/register', async (req, res) => {
   const error = await registerController(req, res);
