@@ -28,18 +28,13 @@ MongoDB.connectDB(async err => {
     }
   });
 
-  app.use(sessionMiddleware);
+  io.use((socket, next) => {
+    sessionMiddleware(socket.request, {}, next);
+  });
   app.use(cors());
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
-  io.use(
-    sharedsession(sessionMiddleware, {
-      autoSave: true
-    })
-  );
-  // io.use((socket, next) => {
-  //   sessionMiddleware(socket.request, {}, next);
-  // });
+  app.use(sessionMiddleware);
 
   app.use('/api/users', require('./routes/users'));
   app.use('/api/servers', require('./routes/servers'));

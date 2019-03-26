@@ -4,12 +4,12 @@ module.exports = {
     const Database = require('../db/actions');
 
     io.of(serverName).on('connection', nsp => {
+      console.log(nsp.request.sessionID);
       channelNames.forEach(channelName => {
         nsp.join(channelName);
       });
 
       nsp.on('messageSend', data => {
-        console.log(nsp.handshake.session);
         Database.insertMessage(serverName, data.channel, data.message);
         io.of(serverName)
           .in(data.channel)
@@ -20,7 +20,7 @@ module.exports = {
         const messages = await Database.fetchMessages(
           serverName,
           data.channel,
-          data.lastMesssageIndex
+          data.lastMesssageTimestamp
         );
         nsp.emit('fetchedMessages', messages);
       });

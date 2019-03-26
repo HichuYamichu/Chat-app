@@ -48,7 +48,7 @@ module.exports = {
       .collection('servers')
       .find(
         { _id: { $in: user.memberOf } },
-        { projection: { '_id': false, 'channels.messages': { $slice: -15 } } }
+        { projection: { _id: false, 'channels.messages': { $slice: -15 } } }
       )
       .toArray();
     servers.forEach(server => {
@@ -65,16 +65,23 @@ module.exports = {
       { $push: { 'channels.$.messages': message } }
     );
   },
-  async fetchMessages(serverName, channelName, lastMesssageIndex) {
-    const res = await db.collection('servers').findOne(
-      {
-        serverName: serverName,
-        channels: { $elemMatch: { channelName: channelName } }
-      },
-      { projection: { '_id': false, 'channels.$': { $slice: 15 } } }
-    );
-    return res.channels[0].messages.filter(
-      message => message.date < lastMesssageIndex
-    );
+  fetchMessages(serverName, channelName, lastMesssageTimestamp) {
+    return db
+      .collection('servers')
+      .aggregate([
+        { $unwind: '$channels' },
+        { $unwind: '$channels.messages' },
+        {
+          $match: {
+            'serverName': serverName,
+            'channels.channelName': channelName,
+            'channels.messages.timestamp': { $gt: lastMesssageTimestamp }
+          }
+        },
+        { $project: { _id: false } },
+        { $replaceRoot: { newRoot: '$channels.messages' } },
+        { $limit: 15 }
+      ])
+      .toArray();
   }
 };

@@ -4,7 +4,7 @@ module.exports = {
     es6: true,
     node: true
   },
-  extends: 'aqua/vue',
+  extends: 'aqua',
   globals: {
     Atomics: 'readonly',
     SharedArrayBuffer: 'readonly'
