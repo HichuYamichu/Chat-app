@@ -1,10 +1,14 @@
 module.exports = {
-  createServer(serverName, channelNames) {
-    const io = require('../server').io();
+  createServer(io, serverName, channelNames) {
+    const sessionMiddleware = require('../sessionConfig').getSession();
     const Database = require('../db/actions');
 
+    io.use((socket, next) => {
+      sessionMiddleware(socket.request, {}, next);
+    });
+
     io.of(serverName).on('connection', nsp => {
-      console.log(nsp.request.sessionID);
+      console.log(nsp.request.session);
       channelNames.forEach(channelName => {
         nsp.join(channelName);
       });
