@@ -7,10 +7,10 @@ module.exports.init = db => {
 
   sessionMiddleware = session({
     name: 'socket.sid',
-    // store: store,
+    store: store,
     secret: process.env.SECRET || 'HIdi}65saUB.fws8DAL.;fPOq,(3',
     resave: false,
-    secure: false,
+    rolling: true,
     saveUninitialized: false,
     cookie: {
       maxAge: 1000 * 60 * 2

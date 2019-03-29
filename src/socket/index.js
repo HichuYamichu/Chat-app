@@ -9,6 +9,7 @@ module.exports = {
 
     io.of(serverName).on('connection', nsp => {
       console.log(nsp.request.session);
+      if (!nsp.request.session.user.memberOf.includes(serverName)) return nsp.disconnect();
       channelNames.forEach(channelName => {
         nsp.join(channelName);
       });

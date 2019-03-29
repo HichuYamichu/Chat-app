@@ -32,6 +32,7 @@ module.exports = {
       .findOne({ username: userName }, { projection: { _id: false } });
   },
   insertUser(user) {
+    console.log(user);
     return db.collection('users').insertOne(user);
   },
   getPasswordHash(username) {
@@ -39,22 +40,24 @@ module.exports = {
       .collection('users')
       .findOne({ username }, { projection: { _id: false, password: true } });
   },
-  async retriveUserAndServers(username) {
-    const user = await db
+  retriveUser(username) {
+    return db
       .collection('users')
       .findOne({ username }, { projection: { _id: false, password: false } });
+  },
+  async retriveServers(serversID) {
+    console.log(serversID);
     const userServers = {};
-    const servers = await db
+    await db
       .collection('servers')
       .find(
-        { _id: { $in: user.memberOf } },
-        { projection: { '_id': false, 'channels.messages': { $slice: -15 } } }
+        { _id: { $in: serversID } },
+        { projection: { _id: false, 'channels.messages': { $slice: -15 } } }
       )
-      .toArray();
-    servers.forEach(server => {
-      userServers[server.serverName] = server;
-    });
-    return { user: user, servers: userServers };
+      .forEach(server => {
+        userServers[server.serverName] = server;
+      });
+    return userServers;
   },
   async insertMessage(serverName, channelName, message) {
     await db.collection('servers').updateOne(
@@ -73,7 +76,7 @@ module.exports = {
         { $unwind: '$channels.messages' },
         {
           $match: {
-            'serverName': serverName,
+            serverName: serverName,
             'channels.channelName': channelName,
             'channels.messages.timestamp': { $gt: lastMesssageTimestamp }
           }
