@@ -16,7 +16,20 @@ module.exports = {
       );
   },
   async createServer(serverData) {
-    await db.collection('servers').insertOne(serverData);
+    console.log(serverData);
+    await db.collection('servers').insertOne({
+      serverName: serverData.serverName,
+      owner: serverData.owner,
+      channels: [{ messages: [], channelName: 'main' }],
+      roles: {
+        default: {
+          roleName: 'default',
+          disallowedChannels: [],
+          permissions: {},
+          roleMembers: [serverData.owner]
+        }
+      }
+    });
   },
   async addChannel(serverName, channelName) {
     await db
@@ -45,19 +58,14 @@ module.exports = {
       .collection('users')
       .findOne({ username }, { projection: { _id: false, password: false } });
   },
-  async retriveServers(serversID) {
-    console.log(serversID);
-    const userServers = {};
-    await db
+  retriveServers(serversID) {
+    return db
       .collection('servers')
       .find(
         { _id: { $in: serversID } },
         { projection: { _id: false, 'channels.messages': { $slice: -15 } } }
       )
-      .forEach(server => {
-        userServers[server.serverName] = server;
-      });
-    return userServers;
+      .toArray();
   },
   async insertMessage(serverName, channelName, message) {
     await db.collection('servers').updateOne(
@@ -86,5 +94,18 @@ module.exports = {
         { $limit: 15 }
       ])
       .toArray();
+  },
+  getAccesList(username, serverList) {
+    return db.collection('servers').aggregate([
+      { $unwind: '$roles' },
+      { $unwind: '$roles.roleMembers' },
+      {
+        $match: {
+          'serverName': { $in: serverList },
+          'roles.roleMembers': username
+        }
+      },
+      { $project: { _id: false, roles: true, serverName: true } }
+    ]).toArray();
   }
 };

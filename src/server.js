@@ -33,7 +33,6 @@ MongoDB.connectDB(async err => {
 
   savedServers.forEach(savedServer => {
     SocketHandler.createServer(
-      io,
       savedServer.serverName,
       savedServer.channels.map(channel => channel.channelName)
     );
@@ -47,3 +46,5 @@ MongoDB.connectDB(async err => {
 process.on('unhandledRejection', (reason, p) => {
   console.log('Unhandled Rejection at:', p, 'reason:', reason);
 });
+
+module.exports.io = () => io;

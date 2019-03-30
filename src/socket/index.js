@@ -1,16 +1,23 @@
 module.exports = {
-  createServer(io, serverName, channelNames) {
-    const sessionMiddleware = require('../sessionConfig').getSession();
+  createServer(serverName, channelNames) {
     const Database = require('../db/actions');
+    const sessionMiddleware = require('../sessionConfig').getSession();
+    const io = require('../server').io();
 
     io.use((socket, next) => {
       sessionMiddleware(socket.request, {}, next);
     });
 
     io.of(serverName).on('connection', nsp => {
-      console.log(nsp.request.session);
-      if (!nsp.request.session.user.memberOf.includes(serverName)) return nsp.disconnect();
+      if (
+        !nsp.request.session ||
+        !nsp.request.session.user ||
+        !nsp.request.session.user.accessList ||
+        !nsp.request.session.user.accessList.some(serverAcces => serverAcces.serverName === serverName)
+      ) return nsp.disconnect();
+      const accessListEntry = nsp.request.session.user.accessList.find(serverAcces => serverAcces.serverName === serverName);
       channelNames.forEach(channelName => {
+        if (accessListEntry.disallowedChannels.includes(channelName)) return;
         nsp.join(channelName);
       });
 
