@@ -25,7 +25,7 @@ module.exports = {
         Database.insertMessage(serverName, data.channel, data.message);
         io.of(serverName)
           .in(data.channel)
-          .emit('messageRecived', data.message);
+          .emit('messageRecived', data);
       });
 
       nsp.on('fetchMessages', async data => {

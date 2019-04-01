@@ -15,20 +15,20 @@ module.exports = {
         { projection: { _id: false } }
       );
   },
-  async createServer(serverData) {
-    console.log(serverData);
-    await db.collection('servers').insertOne({
-      serverName: serverData.serverName,
-      owner: serverData.owner,
-      channels: [{ messages: [], channelName: 'main' }],
-      roles: {
-        default: {
-          roleName: 'default',
+  createServer(serverData) {
+    return db.collection('servers').insertOne({
+      'serverName': serverData.serverName,
+      'public': true,
+      'owner': serverData.owner,
+      'channels': [{ messages: [], channelName: 'main' }],
+      'roles': [
+        {
+          channelName: 'default',
           disallowedChannels: [],
           permissions: {},
           roleMembers: [serverData.owner]
         }
-      }
+      ]
     });
   },
   async addChannel(serverName, channelName) {
@@ -45,7 +45,6 @@ module.exports = {
       .findOne({ username: userName }, { projection: { _id: false } });
   },
   insertUser(user) {
-    console.log(user);
     return db.collection('users').insertOne(user);
   },
   getPasswordHash(username) {
@@ -64,6 +63,15 @@ module.exports = {
       .find(
         { _id: { $in: serversID } },
         { projection: { _id: false, 'channels.messages': { $slice: -15 } } }
+      )
+      .toArray();
+  },
+  getServerNamesAndDesc() {
+    return db
+      .collection('servers')
+      .find(
+        { public: true },
+        { projection: { _id: false, serverName: true, description: true } }
       )
       .toArray();
   },
@@ -95,17 +103,34 @@ module.exports = {
       ])
       .toArray();
   },
-  getAccesList(username, serverList) {
-    return db.collection('servers').aggregate([
-      { $unwind: '$roles' },
-      { $unwind: '$roles.roleMembers' },
-      {
-        $match: {
-          'serverName': { $in: serverList },
-          'roles.roleMembers': username
-        }
-      },
-      { $project: { _id: false, roles: true, serverName: true } }
-    ]).toArray();
+  getAccessList(username, serverList) {
+    return db
+      .collection('servers')
+      .aggregate([
+        { $unwind: '$roles' },
+        { $unwind: '$roles.roleMembers' },
+        {
+          $match: {
+            serverName: { $in: serverList },
+            'roles.roleMembers': username
+          }
+        },
+        { $project: { _id: false, roles: true, serverName: true } }
+      ])
+      .toArray();
+  },
+  getServerID(serverName) {
+    return db.collection('servers').findOne({ serverName });
+  },
+  async userJoin(serverID, username) {
+    await db
+      .collection('users')
+      .updateOne({ username: username }, { $push: { memberOf: serverID } });
+    await db
+      .collection('servers')
+      .updateOne(
+        { _id: serverID },
+        { $push: { 'roles.0.roleMembers': username } }
+      );
   }
 };
