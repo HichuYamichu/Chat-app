@@ -15,21 +15,24 @@ module.exports = {
         { projection: { _id: false } }
       );
   },
-  createServer(serverData) {
-    return db.collection('servers').insertOne({
+  async createServer(serverData) {
+    const server = await db.collection('servers').insertOne({
       'serverName': serverData.serverName,
       'public': true,
       'owner': serverData.owner,
+      'description': serverData.description,
       'channels': [{ messages: [], channelName: 'main' }],
       'roles': [
         {
-          channelName: 'default',
+          rolename: 'everyone',
           disallowedChannels: [],
           permissions: {},
           roleMembers: [serverData.owner]
         }
       ]
     });
+    await db.collection('users').updateOne({ username: serverData.owner }, { $push: { memberOf: server.ops[0]._id } });
+    return server;
   },
   async addChannel(serverName, channelName) {
     await db

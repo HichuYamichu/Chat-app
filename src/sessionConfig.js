@@ -6,14 +6,14 @@ module.exports.init = db => {
   const store = new MongoStore({ db });
 
   sessionMiddleware = session({
-    name: 'socket.sid',
+    name: 'chat-app',
     store: store,
     secret: process.env.SECRET || 'HIdi}65saUB.fws8DAL.;fPOq,(3',
-    resave: false,
+    resave: true,
     rolling: true,
     saveUninitialized: false,
     cookie: {
-      maxAge: 1000 * 60 * 2
+      maxAge: 1000 * 60 * 60
     }
   });
 };

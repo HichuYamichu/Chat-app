@@ -19,7 +19,8 @@ MongoDB.connectDB(async err => {
     })
   );
 
-  app.use(sessionConfig.getSession());
+  const sessionMiddleware = sessionConfig.getSession();
+  app.use(sessionMiddleware);
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
 
