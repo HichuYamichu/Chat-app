@@ -18,7 +18,7 @@ module.exports = {
   async createServer(serverData) {
     const server = await db.collection('servers').insertOne({
       'serverName': serverData.serverName,
-      'public': true,
+      'private': serverData.private,
       'owner': serverData.owner,
       'description': serverData.description,
       'channels': [{ messages: [], channelName: 'main' }],
@@ -70,13 +70,10 @@ module.exports = {
       .toArray();
   },
   getServerNamesAndDesc() {
-    return db
-      .collection('servers')
-      .find(
-        { public: true },
-        { projection: { _id: false, serverName: true, description: true } }
-      )
-      .toArray();
+    return db.collection('servers').aggregate([
+      { $sort: { 'roles.0.roleMembers': 1 } },
+      { $limit: 10 }
+    ]).toArray();
   },
   async insertMessage(serverName, channelName, message) {
     await db.collection('servers').updateOne(

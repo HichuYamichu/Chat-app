@@ -10,44 +10,56 @@ module.exports = {
       autoSave: true
     }));
 
-    io.of(serverName).on('connection', nsp => {
+    io.of(serverName).activeUsers = [];
+
+    io.of(serverName).on('connection', socket => {
       if (
-        !nsp.handshake.session ||
-        !nsp.handshake.session.user ||
-        !nsp.handshake.session.user.accessList ||
-        !nsp.handshake.session.user.accessList.some(serverAcces => serverAcces.serverName === serverName)
-      ) return nsp.disconnect();
-      const accessListEntry = nsp.handshake.session.user.accessList.find(serverAcces => serverAcces.serverName === serverName);
+        !socket.handshake.session ||
+        !socket.handshake.session.user ||
+        !socket.handshake.session.user.accessList ||
+        !socket.handshake.session.user.accessList.some(serverAcces => serverAcces.serverName === serverName)
+      ) return socket.disconnect();
+
+      const accessListEntry = socket.handshake.session.user.accessList.find(serverAcces => serverAcces.serverName === serverName);
       channelNames.forEach(channelName => {
         if (accessListEntry.disallowedChannels.includes(channelName)) return;
-        nsp.join(channelName);
+        socket.join(channelName);
       });
 
-      nsp.on('messageSend', data => {
+      socket.user = { username: socket.handshake.session.user.username };
+      io.of(serverName).activeUsers.push(socket.user);
+      io.of(serverName).emit('updateActiveUsers', io.of(serverName).activeUsers);
+
+      socket.on('disconnect', () => {
+        io.of(serverName).activeUsers = io.of(serverName).activeUsers.filter(user => user !== socket.user);
+        io.of(serverName).emit('updateActiveUsers', io.of(serverName).activeUsers);
+      });
+
+      socket.on('messageSend', data => {
         Database.insertMessage(serverName, data.channel, data.message);
         io.of(serverName)
           .in(data.channel)
           .emit('messageRecived', data);
       });
 
-      nsp.on('fetchMessages', async data => {
+      socket.on('fetchMessages', async data => {
         const messages = await Database.fetchMessages(
           serverName,
           data.channel,
           data.lastMesssageTimestamp
         );
-        nsp.emit('fetchedMessages', messages);
+        socket.emit('fetchedMessages', messages);
       });
 
-      nsp.on('init', data => {
+      socket.on('init', data => {
         data.forEach(channel => {
-          nsp.join(channel);
+          socket.join(channel);
         });
       });
 
-      nsp.on('createChannel', data => {
+      socket.on('createChannel', data => {
         console.log(data);
-        nsp.join(data);
+        socket.join(data);
       });
     });
   }

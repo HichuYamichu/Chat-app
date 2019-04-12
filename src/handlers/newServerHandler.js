@@ -2,7 +2,6 @@ const Servers = require('../socket/index');
 const Database = require('../db/actions');
 
 module.exports = async (req, res) => {
-  console.log(req.session.user);
   const { ops } = await Database.createServer(req.body);
   const server = ops[0];
   server.roles.forEach(role => {
