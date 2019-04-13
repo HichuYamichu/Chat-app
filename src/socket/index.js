@@ -6,9 +6,11 @@ module.exports = {
     const sessionConfig = require('../sessionConfig');
 
     const sessionMiddleware = sessionConfig.getSession();
-    io.of(serverName).use(sharedsession(sessionMiddleware, {
-      autoSave: true
-    }));
+    io.of(serverName).use(
+      sharedsession(sessionMiddleware, {
+        autoSave: true
+      })
+    );
 
     io.of(serverName).activeUsers = [];
 
@@ -17,22 +19,45 @@ module.exports = {
         !socket.handshake.session ||
         !socket.handshake.session.user ||
         !socket.handshake.session.user.accessList ||
-        !socket.handshake.session.user.accessList.some(serverAcces => serverAcces.serverName === serverName)
-      ) return socket.disconnect();
+        !socket.handshake.session.user.accessList.some(
+          serverAcces => serverAcces.serverName === serverName
+        )
+      ) {
+        return socket.disconnect();
+      }
 
-      const accessListEntry = socket.handshake.session.user.accessList.find(serverAcces => serverAcces.serverName === serverName);
       channelNames.forEach(channelName => {
-        if (accessListEntry.disallowedChannels.includes(channelName)) return;
+        if (
+          socket.handshake.session.user.accessList
+            .find(serverAcces => serverAcces.serverName === serverName)
+            .disallowedChannels.includes(channelName)
+        ) { return; }
         socket.join(channelName);
       });
 
       socket.user = { username: socket.handshake.session.user.username };
       io.of(serverName).activeUsers.push(socket.user);
-      io.of(serverName).emit('updateActiveUsers', io.of(serverName).activeUsers);
+      io.of(serverName).emit(
+        'updateActiveUsers',
+        io.of(serverName).activeUsers
+      );
 
       socket.on('disconnect', () => {
-        io.of(serverName).activeUsers = io.of(serverName).activeUsers.filter(user => user !== socket.user);
-        io.of(serverName).emit('updateActiveUsers', io.of(serverName).activeUsers);
+        io.of(serverName).activeUsers = io
+          .of(serverName)
+          .activeUsers.filter(user => user !== socket.user);
+        io.of(serverName).emit(
+          'updateActiveUsers',
+          io.of(serverName).activeUsers
+        );
+      });
+
+      socket.on('leaveServer', () => {
+        Database.leaveServer(serverName, socket.user.username);
+        socket.disconnect();
+        socket.handshake.session.user.accessList = socket.handshake.session.user.accessList.filter(
+          accessListEntry => accessListEntry.serverName !== serverName
+        );
       });
 
       socket.on('messageSend', data => {

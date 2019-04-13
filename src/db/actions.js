@@ -31,8 +31,26 @@ module.exports = {
         }
       ]
     });
-    await db.collection('users').updateOne({ username: serverData.owner }, { $push: { memberOf: server.ops[0]._id } });
+    await db
+      .collection('users')
+      .updateOne(
+        { username: serverData.owner },
+        { $push: { memberOf: server.ops[0]._id } }
+      );
     return server;
+  },
+
+  async leaveServer(serverName, username) {
+    const { value } = await db
+      .collection('servers')
+      .findOneAndUpdate(
+        { serverName },
+        { $pull: { 'roles.$[].roleMembers': username } },
+        { projection: { _id: true } }
+      );
+    await db
+      .collection('users')
+      .updateOne({ username }, { $pull: { memberOf: value._id } });
   },
   async addChannel(serverName, channelName) {
     await db
@@ -65,15 +83,19 @@ module.exports = {
       .collection('servers')
       .find(
         { _id: { $in: serversID } },
-        { projection: { _id: false, 'channels.messages': { $slice: -15 } } }
+        { projection: { '_id': false, 'channels.messages': { $slice: -15 } } }
       )
       .toArray();
   },
   getServerNamesAndDesc() {
-    return db.collection('servers').aggregate([
-      { $sort: { 'roles.0.roleMembers': 1 } },
-      { $limit: 10 }
-    ]).toArray();
+    return db
+      .collection('servers')
+      .aggregate([
+        { $project: { _id: false, serverName: true, description: true } },
+        { $sort: { 'roles.0.roleMembers': 1 } },
+        { $limit: 10 }
+      ])
+      .toArray();
   },
   async insertMessage(serverName, channelName, message) {
     await db.collection('servers').updateOne(
@@ -92,7 +114,7 @@ module.exports = {
         { $unwind: '$channels.messages' },
         {
           $match: {
-            serverName: serverName,
+            'serverName': serverName,
             'channels.channelName': channelName,
             'channels.messages.timestamp': { $gt: lastMesssageTimestamp }
           }
@@ -111,7 +133,7 @@ module.exports = {
         { $unwind: '$roles.roleMembers' },
         {
           $match: {
-            serverName: { $in: serverList },
+            'serverName': { $in: serverList },
             'roles.roleMembers': username
           }
         },
