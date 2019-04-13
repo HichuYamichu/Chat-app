@@ -11,7 +11,7 @@ module.exports = {
     return db
       .collection('servers')
       .findOne(
-        { serverName: serverName, channels: channelName },
+        { 'serverName': serverName, 'channels.channelName': channelName },
         { projection: { _id: false } }
       );
   },
@@ -52,13 +52,27 @@ module.exports = {
       .collection('users')
       .updateOne({ username }, { $pull: { memberOf: value._id } });
   },
-  async addChannel(serverName, channelName) {
+
+  async deleteServer(serverName) {
+    const { _id } = await db
+      .collection('servers')
+      .findOne({ serverName }, { projection: { _id: true } });
+    db.collection('users').updateMany(
+      { memberOf: _id },
+      { $pull: { memberOf: _id } }
+    );
+    db.collection('servers').deleteOne({ serverName });
+  },
+  async addChannel(serverName, channelData) {
     await db
       .collection('servers')
       .updateOne(
         { serverName: serverName },
-        { $push: { channels: channelName } }
+        { $push: { channels: channelData } }
       );
+  },
+  deleteChannel(serverName, channelName) {
+    db.collection('servers').updateOne({ serverName }, { $pull: { channels: { channelName } } });
   },
   checkUserNames(userName) {
     return db
