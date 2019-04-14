@@ -39,19 +39,19 @@ module.exports = {
 
       socket.user = { username: socket.handshake.session.user.username };
       io.of(serverName).activeUsers.push(socket.user);
-      io.of(serverName).emit(
-        'updateActiveUsers',
-        io.of(serverName).activeUsers
-      );
+      io.of(serverName).emit('updateActiveUsers', io.of(serverName).activeUsers);
+
+      socket.on('init', data => {
+        data.forEach(channel => {
+          socket.join(channel);
+        });
+      });
 
       socket.on('disconnect', () => {
         io.of(serverName).activeUsers = io
           .of(serverName)
           .activeUsers.filter(user => user !== socket.user);
-        io.of(serverName).emit(
-          'updateActiveUsers',
-          io.of(serverName).activeUsers
-        );
+        io.of(serverName).emit('updateActiveUsers', io.of(serverName).activeUsers);
       });
 
       socket.on('logout', () => socket.disconnect());
@@ -67,12 +67,19 @@ module.exports = {
       socket.on('deleteServer', () => {
         Database.deleteServer(serverName);
         io.of(serverName).emit('serverDelete', serverName);
-        Object.keys(io.of(serverName).sockets).forEach(connectedSocket =>
-          io.of(serverName).sockets[connectedSocket].disconnect());
+        Object.keys(io.of(serverName).sockets).forEach(connectedSocket => {
+          io.of(serverName).sockets[connectedSocket].handshake.session.user.accessList = io
+            .of(serverName)
+            .sockets[connectedSocket].handshake.session.user.accessList.filter(
+              accessListEntry => accessListEntry.serverName !== serverName
+            );
+          io.of(serverName).sockets[connectedSocket].disconnect();
+        });
         delete io.nsps[`/${serverName}`];
       });
 
       socket.on('messageSend', data => {
+        console.log(socket.handshake.session.user);
         Database.insertMessage(serverName, data.channel, data.message);
         io.of(serverName)
           .in(data.channel)
@@ -88,33 +95,41 @@ module.exports = {
         socket.emit('updateMessages', { messages, channelName: data.channel });
       });
 
-      socket.on('init', data => {
-        data.forEach(channel => {
-          socket.join(channel);
-        });
-      });
-
       socket.on('createChannel', async data => {
+        const format = /[ !@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+        if (format.test(data)) {
+          return socket.emit('errorOccured', 'Illegal character in channel name!');
+        }
         const taken = await Database.checkChannelNames(serverName, data);
         if (taken) {
-          socket.emit('errorOccured', 'Channel name taken');
-        } else {
-          Object.keys(io.of(serverName).sockets).forEach(connectedSocket =>
-            io.of(serverName).sockets[connectedSocket].join(data));
-
-          const channel = { channelName: data, messages: [] };
-          Database.addChannel(serverName, channel);
-          io.of(serverName).emit('addChannel', channel);
+          return socket.emit('errorOccured', 'Channel name taken');
         }
+        Object.keys(io.of(serverName).sockets).forEach(connectedSocket =>
+          io.of(serverName).sockets[connectedSocket].join(data));
+
+        const channel = { channelName: data, messages: [] };
+        Database.addChannel(serverName, channel);
+        io.of(serverName).emit('addChannel', channel);
       });
 
-      socket.on('deleteChannel', async data => {
-        const exists = await Database.checkChannelNames(serverName, data);
+      socket.on('deleteChannel', async channelName => {
+        const exists = await Database.checkChannelNames(serverName, channelName);
         if (exists) {
-          Database.deleteChannel(serverName, data);
-          Object.keys(io.of(serverName).sockets).forEach(connectedSocket =>
-            io.of(serverName).sockets[connectedSocket].leave(data));
-          io.of(serverName).emit('channelDeleted', data);
+          Database.deleteChannel(serverName, channelName);
+          Object.keys(io.of(serverName).sockets).forEach(connectedSocket => {
+            io
+              .of(serverName)
+              .sockets[connectedSocket].handshake.session.user.accessList.find(
+                accessListEntry => accessListEntry.serverName === serverName
+              ).disallowedChannels = io
+                .of(serverName)
+                .sockets[connectedSocket].handshake.session.user.accessList.find(
+                  accessListEntry => accessListEntry.serverName === serverName
+                )
+                .disallowedChannels.filter(channel => channel.channelName !== channelName);
+            io.of(serverName).sockets[connectedSocket].leave(channelName);
+          });
+          io.of(serverName).emit('channelDeleted', channelName);
         }
       });
     });

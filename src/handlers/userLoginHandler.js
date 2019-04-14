@@ -7,11 +7,13 @@ module.exports = async (req, res) => {
   servers.forEach(server => {
     server.roles.forEach(role => {
       if (role.roleMembers.some(member => member === user.username)) {
-        server.channels.filter(
-          channel => !role.disallowedChannels.includes(channel.channelName)
-        );
-        role.serverName = server.serverName;
-        accessList.push(role);
+        server.channels.filter(channel => !role.disallowedChannels.includes(channel.channelName));
+        accessList.push({
+          roleName: role.roleName,
+          disallowedChannels: role.disallowedChannels,
+          permissions: role.permissions,
+          serverName: server.serverName
+        });
       }
     });
   });

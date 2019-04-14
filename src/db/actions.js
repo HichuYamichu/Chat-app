@@ -5,15 +5,19 @@ module.exports = {
   checkServerNames(serverName) {
     return db
       .collection('servers')
-      .findOne({ serverName: serverName }, { projection: { _id: false } });
+      .find({ serverName: serverName }, { projection: { _id: true } })
+      .limit(1)
+      .count();
   },
   checkChannelNames(serverName, channelName) {
     return db
       .collection('servers')
-      .findOne(
+      .find(
         { 'serverName': serverName, 'channels.channelName': channelName },
-        { projection: { _id: false } }
-      );
+        { projection: { _id: true } }
+      )
+      .limit(1)
+      .count();
   },
   async createServer(serverData) {
     const server = await db.collection('servers').insertOne({
@@ -24,7 +28,7 @@ module.exports = {
       'channels': [{ messages: [], channelName: 'main' }],
       'roles': [
         {
-          rolename: 'everyone',
+          roleName: 'everyone',
           disallowedChannels: [],
           permissions: {},
           roleMembers: [serverData.owner]
@@ -33,10 +37,7 @@ module.exports = {
     });
     await db
       .collection('users')
-      .updateOne(
-        { username: serverData.owner },
-        { $push: { memberOf: server.ops[0]._id } }
-      );
+      .updateOne({ username: serverData.owner }, { $push: { memberOf: server.ops[0]._id } });
     return server;
   },
 
@@ -48,36 +49,26 @@ module.exports = {
         { $pull: { 'roles.$[].roleMembers': username } },
         { projection: { _id: true } }
       );
-    await db
-      .collection('users')
-      .updateOne({ username }, { $pull: { memberOf: value._id } });
+    await db.collection('users').updateOne({ username }, { $pull: { memberOf: value._id } });
   },
 
   async deleteServer(serverName) {
     const { _id } = await db
       .collection('servers')
       .findOne({ serverName }, { projection: { _id: true } });
-    db.collection('users').updateMany(
-      { memberOf: _id },
-      { $pull: { memberOf: _id } }
-    );
+    db.collection('users').updateMany({ memberOf: _id }, { $pull: { memberOf: _id } });
     db.collection('servers').deleteOne({ serverName });
   },
   async addChannel(serverName, channelData) {
     await db
       .collection('servers')
-      .updateOne(
-        { serverName: serverName },
-        { $push: { channels: channelData } }
-      );
+      .updateOne({ serverName: serverName }, { $push: { channels: channelData } });
   },
   deleteChannel(serverName, channelName) {
     db.collection('servers').updateOne({ serverName }, { $pull: { channels: { channelName } } });
   },
   checkUserNames(userName) {
-    return db
-      .collection('users')
-      .findOne({ username: userName }, { projection: { _id: false } });
+    return db.collection('users').findOne({ username: userName }, { projection: { _id: false } });
   },
   insertUser(user) {
     return db.collection('users').insertOne(user);
@@ -164,9 +155,6 @@ module.exports = {
       .updateOne({ username: username }, { $push: { memberOf: serverID } });
     await db
       .collection('servers')
-      .updateOne(
-        { _id: serverID },
-        { $push: { 'roles.0.roleMembers': username } }
-      );
+      .updateOne({ _id: serverID }, { $push: { 'roles.0.roleMembers': username } });
   }
 };

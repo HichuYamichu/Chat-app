@@ -19,7 +19,10 @@ router.post('/login', async (req, res) => {
 
 router.get('/logout', (req, res) => {
   req.session.destroy();
-  res.clearCookie('chat-app', { path: '/' }).status(200).send('Logged out');
+  res
+    .clearCookie('chat-app', { path: '/' })
+    .status(200)
+    .send('Logged out');
 });
 
 module.exports = router;

@@ -8,6 +8,7 @@ module.exports = async (req, res) => {
     const server = await Database.retriveServers([_id]);
     server[0].roles.forEach(role => {
       req.session.user.accessList.push({
+        roleName: role.roleName,
         disallowedChannels: role.disallowedChannels,
         permissions: role.permissions,
         serverName: req.query.serverName
