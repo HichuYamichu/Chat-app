@@ -21,6 +21,7 @@ router.get('/logout', (req, res) => {
   req.session.destroy();
   res
     .clearCookie('chat-app', { path: '/' })
+    .clearCookie('io', { path: '/' })
     .status(200)
     .send('Logged out');
 });

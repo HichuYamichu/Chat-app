@@ -29,6 +29,7 @@ module.exports = {
       'roles': [
         {
           roleName: 'everyone',
+          roleLevel: 0,
           disallowedChannels: [],
           permissions: {},
           roleMembers: [serverData.owner]
@@ -91,6 +92,9 @@ module.exports = {
         { projection: { '_id': false, 'channels.messages': { $slice: -15 } } }
       )
       .toArray();
+  },
+  retriveServer(serverName) {
+    return db.collection('servers').findOne({ serverName }, { projection: { roles: true } });
   },
   getServerNamesAndDesc() {
     return db

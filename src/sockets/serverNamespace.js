@@ -1,40 +1,21 @@
+const Database = require('../db/actions');
 const sharedsession = require('express-socket.io-session');
+const serverAuthMiddleware = require('../middleware/serverAuth');
 
 module.exports = (io, sessionMiddleware, serverName, channelNames) => {
-  const Database = require('../db/actions');
-
   io.of(serverName).use(
     sharedsession(sessionMiddleware, {
       autoSave: true
     })
   );
 
+  io.of(serverName).use(serverAuthMiddleware(serverName, channelNames));
+
   io.of(serverName).activeUsers = [];
 
   io.of(serverName).on('connection', socket => {
-    // if (
-    //   !socket.handshake.session ||
-    //   !socket.handshake.session.user ||
-    //   !socket.handshake.session.user.accessList ||
-    //   !socket.handshake.session.user.accessList.some(
-    //     serverAcces => serverAcces.serverName === serverName
-    //   )
-    // ) {
-    //   return socket.disconnect();
-    // }
-
-    channelNames.forEach(channelName => {
-      // if (
-      //   socket.handshake.session.user.accessList
-      //     .find(serverAcces => serverAcces.serverName === serverName)
-      //     .disallowedChannels.includes(channelName)
-      // ) {
-      //   return;
-      // }
-      socket.join(channelName);
-    });
-
-    io.of(serverName).activeUsers.push({ username: socket.handshake.session.user.username });
+    console.log(`connected to ${serverName}`);
+    io.of(serverName).activeUsers.push({ username: socket.user.username });
     io.of(serverName).emit('updateActiveUsers', io.of(serverName).activeUsers);
 
     socket.on('init', data => {
@@ -44,9 +25,8 @@ module.exports = (io, sessionMiddleware, serverName, channelNames) => {
     });
 
     socket.on('disconnect', () => {
-      io.of(serverName).activeUsers = io
-        .of(serverName)
-        .activeUsers.filter(user => user !== { username: socket.handshake.session.user.username });
+      console.log(`disconnected from ${serverName}`);
+      io.of(serverName).activeUsers = io.of(serverName).activeUsers.filter(user => user.username !== socket.user.username);
       io.of(serverName).emit('updateActiveUsers', io.of(serverName).activeUsers);
     });
 
@@ -55,30 +35,21 @@ module.exports = (io, sessionMiddleware, serverName, channelNames) => {
     socket.on('leaveServer', () => {
       Database.leaveServer(
         serverName,
-        { username: socket.handshake.session.user.username }.username
+        { username: socket.user.username }.username
       );
       socket.disconnect();
-      // socket.handshake.session.user.accessList = socket.handshake.session.user.accessList.filter(
-      //   accessListEntry => accessListEntry.serverName !== serverName
-      // );
     });
 
     socket.on('deleteServer', () => {
       Database.deleteServer(serverName);
       io.of(serverName).emit('serverDelete', serverName);
       Object.keys(io.of(serverName).sockets).forEach(connectedSocket => {
-        io.of(serverName).sockets[connectedSocket].handshake.session.user.accessList = io
-          .of(serverName)
-          .sockets[connectedSocket].handshake.session.user.accessList.filter(
-            accessListEntry => accessListEntry.serverName !== serverName
-          );
         io.of(serverName).sockets[connectedSocket].disconnect();
       });
       delete io.nsps[`/${serverName}`];
     });
 
     socket.on('messageSend', data => {
-      // console.log(socket.handshake.session.user);
       Database.insertMessage(serverName, data.channel, data.message);
       io.of(serverName)
         .in(data.channel)
@@ -120,16 +91,6 @@ module.exports = (io, sessionMiddleware, serverName, channelNames) => {
       if (exists) {
         Database.deleteChannel(serverName, channelName);
         Object.keys(io.of(serverName).sockets).forEach(connectedSocket => {
-          io
-            .of(serverName)
-            .sockets[connectedSocket].handshake.session.user.accessList.find(
-              accessListEntry => accessListEntry.serverName === serverName
-            ).disallowedChannels = io
-              .of(serverName)
-              .sockets[connectedSocket].handshake.session.user.accessList.find(
-                accessListEntry => accessListEntry.serverName === serverName
-              )
-              .disallowedChannels.filter(channel => channel.channelName !== channelName);
           io.of(serverName).sockets[connectedSocket].leave(channelName);
         });
         io.of(serverName).emit('channelDeleted', channelName);

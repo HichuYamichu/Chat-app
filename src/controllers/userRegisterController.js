@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
       password: hash,
       memberOf: []
     });
-    req.session.user = { username: user.ops[0].username, accessList: [] };
+    req.session.user = { username: user.ops[0].username };
     res.send(user.ops[0]);
   });
 };
