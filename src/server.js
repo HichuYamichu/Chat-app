@@ -5,10 +5,12 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const sessionConfig = require('./sessionConfig');
 const MongoDB = require('./db/index');
-const SocketHandler = require('./socket/index');
 
 MongoDB.connectDB(async err => {
   if (err) throw err;
+  const createServer = require('./sockets/serverNamespace');
+  const initPublicNamespace = require('./sockets/publicNamespace');
+
   const db = MongoDB.getDB();
   await sessionConfig.init(db);
 
@@ -25,15 +27,19 @@ MongoDB.connectDB(async err => {
   app.use(bodyParser.urlencoded({ extended: true }));
 
   app.use('/api/users', require('./routes/users'));
+  app.use('/api/servers', require('./middleware/httpAuth'));
   app.use('/api/servers', require('./routes/servers'));
 
+  initPublicNamespace(io, sessionMiddleware);
   const savedServers = await db
     .collection('servers')
     .find()
     .toArray();
 
   savedServers.forEach(savedServer => {
-    SocketHandler.createServer(
+    createServer(
+      io,
+      sessionMiddleware,
       savedServer.serverName,
       savedServer.channels.map(channel => channel.channelName)
     );
@@ -47,5 +53,3 @@ MongoDB.connectDB(async err => {
 process.on('unhandledRejection', (reason, p) => {
   console.log('Unhandled Rejection at:', p, 'reason:', reason);
 });
-
-module.exports.io = () => io;
