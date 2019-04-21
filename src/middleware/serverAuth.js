@@ -1,27 +1,29 @@
 const Database = require('../db/actions');
 
 module.exports = (serverName, channelNames) => async (socket, next) => {
-  const { roles } = await Database.retriveServer(serverName);
-  if (roles[0].roleMembers.includes(socket.handshake.session.user.username)) {
-    const accessListEntry = roles.reduce(
-      (activeRole, role) => {
-        if (
-          role.roleMembers.some(member => member === socket.handshake.session.user.username) &&
-          role.roleLevel > activeRole.roleLevel
-        ) {
-          return (activeRole = role);
-        }
-      },
-      { roleLevel: -1 }
-    );
-    channelNames.forEach(channelName => {
-      if (accessListEntry.disallowedChannels.includes(channelName)) return;
-      socket.join(channelName);
-    });
-    socket.user = socket.handshake.session.user;
-    next();
+  if (socket.handshake.session.user) {
+    const { roles } = await Database.retriveServer(serverName);
+    const userRoles = roles.filter(role =>
+      role.roleMembers.includes(socket.handshake.session.user.username));
+    if (userRoles.length) {
+      const userPermissions = {};
+      const permissions = userRoles.map(role => role.permissions);
+      permissions.forEach(permissionSet => {
+        Object.entries(permissionSet).forEach(permission => {
+          if (permission[1]) userPermissions[permission[0]] = permission[1];
+        });
+      });
+      console.log(userPermissions);
+      channelNames.forEach(channelName => {
+        socket.join(channelName);
+      });
+      socket.user = socket.handshake.session.user;
+      socket.user.permissions = userPermissions;
+      next();
+    } else {
+      next(new Error('Not authorized'));
+    }
   } else {
-    socket.disconnect();
-    next();
+    next(new Error('Not authenticated'));
   }
 };

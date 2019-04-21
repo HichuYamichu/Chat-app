@@ -1,7 +1,9 @@
-const MongoDB = require('../db/index');
-const db = MongoDB.getDB();
+let db;
 
 module.exports = {
+  prepareQueries(_db) {
+    db = _db;
+  },
   checkServerNames(serverName) {
     return db
       .collection('servers')
@@ -31,7 +33,7 @@ module.exports = {
           roleName: 'everyone',
           roleLevel: 0,
           disallowedChannels: [],
-          permissions: {},
+          permissions: { sendMessages: true },
           roleMembers: [serverData.owner]
         }
       ]
@@ -106,8 +108,8 @@ module.exports = {
       ])
       .toArray();
   },
-  async insertMessage(serverName, channelName, message) {
-    await db.collection('servers').updateOne(
+  insertMessage(serverName, channelName, message) {
+    db.collection('servers').updateOne(
       {
         serverName: serverName,
         channels: { $elemMatch: { channelName: channelName } }
@@ -160,5 +162,18 @@ module.exports = {
     await db
       .collection('servers')
       .updateOne({ _id: serverID }, { $push: { 'roles.0.roleMembers': username } });
+  },
+  updateRoles(serverName, roles) {
+    db.collection('servers').updateOne({ serverName }, { $set: { roles } });
+  },
+  addUserToRole(serverName, roleName, username) {
+    return db.collection('servers').findOneAndUpdate(
+      {
+        serverName: serverName,
+        roles: { $elemMatch: { roleName } }
+      },
+      { $push: { 'roles.$.roleMembers': username } },
+      { projection: { 'roles.$': true }, returnNewDocument: true }
+    );
   }
 };

@@ -26,17 +26,16 @@ module.exports = (io, sessionMiddleware, serverName, channelNames) => {
 
     socket.on('disconnect', () => {
       console.log(`disconnected from ${serverName}`);
-      io.of(serverName).activeUsers = io.of(serverName).activeUsers.filter(user => user.username !== socket.user.username);
+      io.of(serverName).activeUsers = io
+        .of(serverName)
+        .activeUsers.filter(user => user.username !== socket.user.username);
       io.of(serverName).emit('updateActiveUsers', io.of(serverName).activeUsers);
     });
 
     socket.on('logout', () => socket.disconnect());
 
     socket.on('leaveServer', () => {
-      Database.leaveServer(
-        serverName,
-        { username: socket.user.username }.username
-      );
+      Database.leaveServer(serverName, socket.user.username);
       socket.disconnect();
     });
 
@@ -50,6 +49,7 @@ module.exports = (io, sessionMiddleware, serverName, channelNames) => {
     });
 
     socket.on('messageSend', data => {
+      if (!socket.user.permissions.sendMessages) return;
       Database.insertMessage(serverName, data.channel, data.message);
       io.of(serverName)
         .in(data.channel)
@@ -83,7 +83,6 @@ module.exports = (io, sessionMiddleware, serverName, channelNames) => {
     });
 
     socket.on('deleteChannel', async channelName => {
-      console.log(channelName);
       if (channelName === 'main') {
         return socket.emit('errorOccured', 'You can not delete main channel');
       }
@@ -97,6 +96,33 @@ module.exports = (io, sessionMiddleware, serverName, channelNames) => {
       } else {
         socket.emit('errorOccured', 'There is no channel with that name');
       }
+    });
+
+    socket.on('updateRoles', roles => {
+      Database.updateRoles(serverName, roles);
+      // Object.keys(io.of(serverName).sockets).forEach(connectedSocket => {
+      //   roles.forEach(role => {
+      //     const matchedRoleIndex = io
+      //       .of(serverName)
+      //       .sockets[connectedSocket].user.roles.findIndex(
+      //         userRole => userRole.roleName === role.roleName
+      //       );
+      //     if (matchedRoleIndex > -1) {
+      //       io.of(serverName).sockets[connectedSocket].user.roles[matchedRoleIndex] = role;
+      //     }
+      //   });
+      // });
+      io.of(serverName).emit('updateRoles', roles);
+    });
+
+    socket.on('assignRole', async data => {
+      const { value: { roles } } = await Database.addUserToRole(serverName, data.role, data.user);
+      // Object.values(io.of(serverName).sockets).forEach(connectedSocket => {
+      //   if (connectedSocket.user.username === data.user) {
+      //     connectedSocket.user.roles.push(roles[0]);
+      //   }
+      // });
+      io.of(serverName).emit('updateUserRole', data);
     });
   });
 };

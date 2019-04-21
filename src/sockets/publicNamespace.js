@@ -22,7 +22,6 @@ module.exports = (io, sessionMiddleware) => {
         const server = await newServerController(io, sessionMiddleware, socket, serverData);
         socket.emit('serverCreated', server);
       } catch (error) {
-        console.log(error.message);
         socket.emit('errorOccured', error.message);
       }
     });

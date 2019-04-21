@@ -5,6 +5,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const sessionConfig = require('./sessionConfig');
 const MongoDB = require('./db/index');
+const { prepareQueries } = require('./db/actions');
 
 MongoDB.connectDB(async err => {
   if (err) throw err;
@@ -13,10 +14,11 @@ MongoDB.connectDB(async err => {
 
   const db = MongoDB.getDB();
   await sessionConfig.init(db);
+  prepareQueries(db);
 
   app.use(
     cors({
-      origin: 'http://localhost:8080',
+      origin: ['http://localhost:8080'],
       credentials: true
     })
   );
