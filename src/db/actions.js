@@ -31,7 +31,6 @@ module.exports = {
       'roles': [
         {
           roleName: 'everyone',
-          roleLevel: 0,
           disallowedChannels: [],
           permissions: { sendMessages: true },
           roleMembers: [serverData.owner]
@@ -45,14 +44,16 @@ module.exports = {
   },
 
   async leaveServer(serverName, username) {
-    const { value } = await db
+    const {
+      value: { _id }
+    } = await db
       .collection('servers')
       .findOneAndUpdate(
         { serverName },
         { $pull: { 'roles.$[].roleMembers': username } },
         { projection: { _id: true } }
       );
-    await db.collection('users').updateOne({ username }, { $pull: { memberOf: value._id } });
+    await db.collection('users').updateOne({ username }, { $pull: { memberOf: _id } });
   },
 
   async deleteServer(serverName) {
@@ -175,5 +176,15 @@ module.exports = {
       { $push: { 'roles.$.roleMembers': username } },
       { projection: { 'roles.$': true }, returnNewDocument: true }
     );
+  },
+  removeUserFromRole(serverName, roleName, username) {
+    console.log(roleName);
+    return db
+      .collection('servers')
+      .findOneAndUpdate(
+        { serverName, roles: { $elemMatch: { roleName } } },
+        { $pull: { 'roles.$.roleMembers': username } },
+        { projection: { roles: true }, returnNewDocument: true }
+      );
   }
 };

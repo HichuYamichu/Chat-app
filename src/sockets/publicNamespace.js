@@ -33,6 +33,9 @@ module.exports = (io, sessionMiddleware) => {
           serverName,
           socket.handshake.session.user.username
         );
+        server.users = [
+          ...server.roles[0].roleMembers.map(member => ({ username: member, active: false }))
+        ];
         socket.emit('joinedServer', server);
       } catch (error) {
         socket.emit('errorOccured', error.message);

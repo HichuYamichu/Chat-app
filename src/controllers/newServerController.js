@@ -8,6 +8,15 @@ module.exports = async (io, sessionMiddleware, socket, serverData) => {
   serverData.owner = socket.handshake.session.user.username;
   const { ops } = await Database.createServer(serverData);
   const server = ops[0];
-  createServerNamespace(io, sessionMiddleware, server.serverName, server.channels.map(channel => channel.channelName));
+  server.users = [
+    ...server.roles[0].roleMembers.map(member => ({ username: member, active: false }))
+  ];
+  createServerNamespace(
+    io,
+    sessionMiddleware,
+    server.serverName,
+    server.channels.map(channel => channel.channelName),
+    [{ username: server.owner, active: false }]
+  );
   return server;
 };

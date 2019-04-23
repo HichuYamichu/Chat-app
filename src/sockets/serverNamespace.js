@@ -2,7 +2,7 @@ const Database = require('../db/actions');
 const sharedsession = require('express-socket.io-session');
 const serverAuthMiddleware = require('../middleware/serverAuth');
 
-module.exports = (io, sessionMiddleware, serverName, channelNames) => {
+module.exports = (io, sessionMiddleware, serverName, channelNames, userList) => {
   io.of(serverName).use(
     sharedsession(sessionMiddleware, {
       autoSave: true
@@ -11,12 +11,17 @@ module.exports = (io, sessionMiddleware, serverName, channelNames) => {
 
   io.of(serverName).use(serverAuthMiddleware(serverName, channelNames));
 
-  io.of(serverName).activeUsers = [];
+  console.log(userList);
+  io.of(serverName).users = userList;
 
   io.of(serverName).on('connection', socket => {
     console.log(`connected to ${serverName}`);
-    io.of(serverName).activeUsers.push({ username: socket.user.username });
-    io.of(serverName).emit('updateActiveUsers', io.of(serverName).activeUsers);
+    if (io.of(serverName).users.map(user => user.username).includes(socket.user.username)) {
+      io.of(serverName).users.find(user => user.username === socket.user.username).active = true;
+    } else {
+      io.of(serverName).users.push({ username: socket.user.username, active: true });
+    }
+    io.of(serverName).emit('updateActiveUsers', io.of(serverName).users);
 
     socket.on('init', data => {
       data.forEach(channel => {
@@ -26,10 +31,8 @@ module.exports = (io, sessionMiddleware, serverName, channelNames) => {
 
     socket.on('disconnect', () => {
       console.log(`disconnected from ${serverName}`);
-      io.of(serverName).activeUsers = io
-        .of(serverName)
-        .activeUsers.filter(user => user.username !== socket.user.username);
-      io.of(serverName).emit('updateActiveUsers', io.of(serverName).activeUsers);
+      io.of(serverName).users.find(user => user.username === socket.user.username).active = false;
+      io.of(serverName).emit('updateActiveUsers', io.of(serverName).users);
     });
 
     socket.on('logout', () => socket.disconnect());
@@ -37,13 +40,15 @@ module.exports = (io, sessionMiddleware, serverName, channelNames) => {
     socket.on('leaveServer', () => {
       Database.leaveServer(serverName, socket.user.username);
       socket.disconnect();
+      io.of(serverName).users.filter(users => users.username !== socket.user.username);
+      io.of(serverName).emit('updateActiveUsers', io.of(serverName).users);
     });
 
     socket.on('deleteServer', () => {
       Database.deleteServer(serverName);
       io.of(serverName).emit('serverDelete', serverName);
-      Object.keys(io.of(serverName).sockets).forEach(connectedSocket => {
-        io.of(serverName).sockets[connectedSocket].disconnect();
+      Object.values(io.of(serverName).sockets).forEach(connectedSocket => {
+        connectedSocket.disconnect();
       });
       delete io.nsps[`/${serverName}`];
     });
@@ -74,8 +79,8 @@ module.exports = (io, sessionMiddleware, serverName, channelNames) => {
       if (taken) {
         return socket.emit('errorOccured', 'Channel name taken');
       }
-      Object.keys(io.of(serverName).sockets).forEach(connectedSocket =>
-        io.of(serverName).sockets[connectedSocket].join(data));
+      Object.values(io.of(serverName).sockets).forEach(connectedSocket =>
+        connectedSocket.join(data));
 
       const channel = { channelName: data, messages: [] };
       Database.addChannel(serverName, channel);
@@ -89,8 +94,8 @@ module.exports = (io, sessionMiddleware, serverName, channelNames) => {
       const exists = await Database.checkChannelNames(serverName, channelName);
       if (exists) {
         Database.deleteChannel(serverName, channelName);
-        Object.keys(io.of(serverName).sockets).forEach(connectedSocket => {
-          io.of(serverName).sockets[connectedSocket].leave(channelName);
+        Object.values(io.of(serverName).sockets).forEach(connectedSocket => {
+          connectedSocket.leave(channelName);
         });
         io.of(serverName).emit('channelDeleted', channelName);
       } else {
@@ -100,28 +105,57 @@ module.exports = (io, sessionMiddleware, serverName, channelNames) => {
 
     socket.on('updateRoles', roles => {
       Database.updateRoles(serverName, roles);
-      // Object.keys(io.of(serverName).sockets).forEach(connectedSocket => {
-      //   roles.forEach(role => {
-      //     const matchedRoleIndex = io
-      //       .of(serverName)
-      //       .sockets[connectedSocket].user.roles.findIndex(
-      //         userRole => userRole.roleName === role.roleName
-      //       );
-      //     if (matchedRoleIndex > -1) {
-      //       io.of(serverName).sockets[connectedSocket].user.roles[matchedRoleIndex] = role;
-      //     }
-      //   });
-      // });
+      Object.values(io.of(serverName).sockets).forEach(connectedSocket => {
+        const newUserRoles = roles.filter(role =>
+          role.roleMembers.includes(connectedSocket.user.username));
+        const userPermissions = {};
+        const permissions = newUserRoles.map(role => role.permissions);
+        permissions.forEach(permissionSet => {
+          Object.entries(permissionSet).forEach(permission => {
+            if (permission[1]) userPermissions[permission[0]] = permission[1];
+          });
+        });
+        connectedSocket.user.permissions = userPermissions;
+      });
       io.of(serverName).emit('updateRoles', roles);
     });
 
-    socket.on('assignRole', async data => {
-      const { value: { roles } } = await Database.addUserToRole(serverName, data.role, data.user);
-      // Object.values(io.of(serverName).sockets).forEach(connectedSocket => {
-      //   if (connectedSocket.user.username === data.user) {
-      //     connectedSocket.user.roles.push(roles[0]);
-      //   }
-      // });
+    socket.on('updateUserRole', async data => {
+      if (data.actionType === 'assign') {
+        const {
+          value: { roles }
+        } = await Database.addUserToRole(serverName, data.role, data.user);
+        const connectedUser = Object.values(io.of(serverName).sockets).find(
+          connectedSocket => connectedSocket.user.username === data.user
+        );
+        if (connectedUser) {
+          Object.entries(roles[0].permissions).forEach(permission => {
+            if (permission[1]) {
+              Object.values(io.of(serverName).sockets).find(
+                connectedSocket => connectedSocket.user.username === data.user
+              ).user.permissions[permission[0]] = permission[1];
+            }
+          });
+        }
+      } else if (data.actionType === 'remove') {
+        const {
+          value: { roles }
+        } = await Database.removeUserFromRole(serverName, data.role, data.user);
+        const updatedUserRoles = roles.filter(
+          role => role.roleMembers.includes(data.user) && role.roleName !== data.role
+        );
+        const userPermissions = {};
+        const permissions = updatedUserRoles.map(role => role.permissions);
+        permissions.forEach(permissionSet => {
+          Object.entries(permissionSet).forEach(permission => {
+            if (permission[1]) userPermissions[permission[0]] = permission[1];
+          });
+        });
+        Object.values(io.of(serverName).sockets).find(
+          connectedSocket => connectedSocket.user.username === data.user
+        ).user.permissions = userPermissions;
+        console.log(socket.user.permissions);
+      }
       io.of(serverName).emit('updateUserRole', data);
     });
   });
