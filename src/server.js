@@ -6,11 +6,11 @@ const bodyParser = require('body-parser');
 const sessionConfig = require('./sessionConfig');
 const MongoDB = require('./db/index');
 const { prepareQueries } = require('./db/actions');
+const createServer = require('./sockets/serverNamespace');
+const initPublicNamespace = require('./sockets/publicNamespace');
 
 MongoDB.connectDB(async err => {
   if (err) throw err;
-  const createServer = require('./sockets/serverNamespace');
-  const initPublicNamespace = require('./sockets/publicNamespace');
 
   const db = MongoDB.getDB();
   await sessionConfig.init(db);

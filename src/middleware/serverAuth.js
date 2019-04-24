@@ -13,7 +13,6 @@ module.exports = (serverName, channelNames) => async (socket, next) => {
           if (permission[1]) userPermissions[permission[0]] = permission[1];
         });
       });
-      console.log(userPermissions);
       channelNames.forEach(channelName => {
         socket.join(channelName);
       });

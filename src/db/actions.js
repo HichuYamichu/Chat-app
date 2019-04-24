@@ -178,7 +178,6 @@ module.exports = {
     );
   },
   removeUserFromRole(serverName, roleName, username) {
-    console.log(roleName);
     return db
       .collection('servers')
       .findOneAndUpdate(
