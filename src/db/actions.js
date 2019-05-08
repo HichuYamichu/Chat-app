@@ -25,6 +25,7 @@ module.exports = {
     const server = await db.collection('servers').insertOne({
       'serverName': serverData.serverName,
       'private': serverData.private,
+      'icon': serverData.hasIcon,
       'owner': serverData.owner,
       'description': serverData.description,
       'channels': [{ messages: [], channelName: 'main' }],

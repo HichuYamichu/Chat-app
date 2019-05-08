@@ -30,6 +30,7 @@ module.exports = (serverName, Database) => (socket, next) => {
           if (permission[1]) userPermissions[permission[0]] = permission[1];
         });
       });
+      // FIX FOR INACTIVE USERS
       Object.values(socket.server.of(serverName).sockets).find(
         connectedSocket => connectedSocket.user.username === data.user
       ).user.permissions = userPermissions;

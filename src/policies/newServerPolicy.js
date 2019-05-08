@@ -9,4 +9,7 @@ module.exports = async serverData => {
   if (isTaken) {
     return 'Name already taken';
   }
+  if (serverData.icon && serverData.icon.byteLength > 1000000) {
+    return 'Icon too big max size 1MB';
+  }
 };

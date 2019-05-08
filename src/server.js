@@ -1,4 +1,5 @@
-const app = require('express')();
+const express = require('express');
+const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 const cors = require('cors');
@@ -31,6 +32,8 @@ MongoDB.connectDB(async err => {
   app.use('/api/users', require('./routes/users'));
   app.use('/api/servers', require('./middleware/httpAuth'));
   app.use('/api/servers', require('./routes/servers'));
+
+  app.use('/static', express.static(`${__dirname}\\assets\\`));
 
   initPublicNamespace(io, sessionMiddleware);
   const savedServers = await db
