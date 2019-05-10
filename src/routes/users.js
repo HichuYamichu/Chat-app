@@ -26,4 +26,12 @@ router.get('/logout', (req, res) => {
     .send('Logged out');
 });
 
+router.get('/checkLoginState', (req, res) => {
+  if (req.session.user) {
+    loginHandler(req, res);
+  } else {
+    res.end();
+  }
+});
+
 module.exports = router;

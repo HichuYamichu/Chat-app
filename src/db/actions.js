@@ -1,3 +1,4 @@
+const { ObjectID } = require('mongodb');
 let db;
 
 module.exports = {
@@ -22,15 +23,18 @@ module.exports = {
       .count();
   },
   async createServer(serverData) {
+    const id = new ObjectID();
     const server = await db.collection('servers').insertOne({
+      '_id': id,
       'serverName': serverData.serverName,
       'private': serverData.private,
       'icon': serverData.hasIcon,
       'owner': serverData.owner,
       'description': serverData.description,
-      'channels': [{ messages: [], channelName: 'main' }],
+      'channels': [{ _id: new ObjectID(), messages: [], channelName: 'main' }],
       'roles': [
         {
+          _id: id,
           roleName: 'everyone',
           disallowedChannels: [],
           permissions: { sendMessages: true },
@@ -73,7 +77,7 @@ module.exports = {
     db.collection('servers').updateOne({ serverName }, { $pull: { channels: { channelName } } });
   },
   checkUserNames(userName) {
-    return db.collection('users').findOne({ username: userName }, { projection: { _id: false } });
+    return db.collection('users').findOne({ username: userName });
   },
   insertUser(user) {
     return db.collection('users').insertOne(user);
@@ -81,19 +85,19 @@ module.exports = {
   getPasswordHash(username) {
     return db
       .collection('users')
-      .findOne({ username }, { projection: { _id: false, password: true } });
+      .findOne({ username }, { projection: { password: true } });
   },
   retriveUser(username) {
     return db
       .collection('users')
-      .findOne({ username }, { projection: { _id: false, password: false } });
+      .findOne({ username }, { projection: { password: false } });
   },
   retriveServers(serversID) {
     return db
       .collection('servers')
       .find(
         { _id: { $in: serversID } },
-        { projection: { '_id': false, 'channels.messages': { $slice: -15 } } }
+        { projection: { 'channels.messages': { $slice: -15 } } }
       )
       .toArray();
   },
@@ -104,13 +108,14 @@ module.exports = {
     return db
       .collection('servers')
       .aggregate([
-        { $project: { _id: false, serverName: true, description: true } },
+        { $project: { serverName: true, description: true } },
         { $sort: { 'roles.0.roleMembers': 1 } },
         { $limit: 10 }
       ])
       .toArray();
   },
   insertMessage(serverName, channelName, message) {
+    message._id = new ObjectID();
     db.collection('servers').updateOne(
       {
         serverName: serverName,
@@ -132,7 +137,6 @@ module.exports = {
             'channels.messages.timestamp': { $gt: lastMesssageTimestamp }
           }
         },
-        { $project: { _id: false } },
         { $replaceRoot: { newRoot: '$channels.messages' } },
         { $limit: 15 }
       ])
@@ -150,7 +154,7 @@ module.exports = {
             'roles.roleMembers': username
           }
         },
-        { $project: { _id: false, roles: true, serverName: true } }
+        { $project: { roles: true, serverName: true } }
       ])
       .toArray();
   },
