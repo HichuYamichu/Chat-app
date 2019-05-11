@@ -26,11 +26,11 @@ module.exports = (io, sessionMiddleware) => {
       }
     });
 
-    socket.on('joinServer', async serverName => {
+    socket.on('joinServer', async serverID => {
       try {
         const server = await joinServerController(
           socket,
-          serverName,
+          serverID,
           socket.handshake.session.user.username
         );
         server.users = [

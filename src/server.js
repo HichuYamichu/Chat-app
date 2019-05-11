@@ -45,8 +45,8 @@ MongoDB.connectDB(async err => {
     createServer(
       io,
       sessionMiddleware,
-      savedServer.serverName,
-      savedServer.channels.map(channel => channel.channelName),
+      savedServer._id,
+      savedServer.channels.map(channel => channel._id),
       savedServer.roles[0].roleMembers.map(member => ({ username: member, active: false }))
     );
   });

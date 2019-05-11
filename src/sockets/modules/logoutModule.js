@@ -1,4 +1,4 @@
-module.exports = serverName => (socket, next) => {
+module.exports = serverID => (socket, next) => {
   socket.on('logout', () => socket.disconnect());
   next();
 };

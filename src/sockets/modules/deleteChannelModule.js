@@ -1,18 +1,13 @@
-module.exports = (serverName, Database) => (socket, next) => {
-  socket.on('deleteChannel', async channelName => {
-    if (channelName === 'main') {
-      return socket.emit('errorOccured', 'You can not delete main channel');
-    }
-    const exists = await Database.checkChannelNames(serverName, channelName);
-    if (exists) {
-      Database.deleteChannel(serverName, channelName);
-      Object.values(socket.server.of(serverName).sockets).forEach(connectedSocket => {
-        connectedSocket.leave(channelName);
-      });
-      socket.server.of(serverName).emit('channelDeleted', channelName);
-    } else {
-      socket.emit('errorOccured', 'There is no channel with that name');
-    }
+module.exports = (serverID, Database) => (socket, next) => {
+  socket.on('deleteChannel', async channelID => {
+    // if (channelName === 'main') {
+    //   return socket.emit('errorOccured', 'You can not delete main channel');
+    // }
+    Database.deleteChannel(serverID, channelID);
+    Object.values(socket.server.of(serverID).sockets).forEach(connectedSocket => {
+      connectedSocket.leave(channelID);
+    });
+    socket.server.of(serverID).emit('channelDeleted', channelID);
   });
   next();
 };

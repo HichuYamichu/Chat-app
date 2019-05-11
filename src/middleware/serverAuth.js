@@ -1,8 +1,8 @@
 const Database = require('../db/actions');
 
-module.exports = (serverName, channelNames) => async (socket, next) => {
+module.exports = (serverID, channelIDs) => async (socket, next) => {
   if (socket.handshake.session.user) {
-    const { roles } = await Database.retriveServer(serverName);
+    const { roles } = await Database.retriveServer(serverID);
     const userRoles = roles.filter(role =>
       role.roleMembers.includes(socket.handshake.session.user.username));
     if (userRoles.length) {
@@ -13,8 +13,8 @@ module.exports = (serverName, channelNames) => async (socket, next) => {
           if (permission[1]) userPermissions[permission[0]] = permission[1];
         });
       });
-      channelNames.forEach(channelName => {
-        socket.join(channelName);
+      channelIDs.forEach(channelID => {
+        socket.join(channelID);
       });
       socket.user = socket.handshake.session.user;
       socket.user.permissions = userPermissions;
