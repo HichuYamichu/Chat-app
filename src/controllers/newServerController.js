@@ -6,9 +6,11 @@ const { ObjectID } = require('mongodb');
 module.exports = async (io, sessionMiddleware, socket, serverData) => {
   const err = await newServerPolicy(serverData);
   if (err) throw new Error(err);
-  serverData.owner = socket.handshake.session.user.username;
   const id = new ObjectID();
-
+  serverData.owner = {
+    _id: socket.handshake.session.user._id,
+    username: socket.handshake.session.user.username
+  };
   if (serverData.icon) {
     serverData.hasIcon = true;
     require('fs').writeFile(`./src/assets/${id}.jpg`, serverData.icon, err => {
@@ -21,15 +23,11 @@ module.exports = async (io, sessionMiddleware, socket, serverData) => {
   const { ops } = await Database.createServer(serverData, id);
   const server = ops[0];
 
-  server.users = [
-    ...server.roles[0].roleMembers.map(member => ({ username: member, active: false }))
-  ];
   createServerNamespace(
     io,
     sessionMiddleware,
-    server._id,
-    server.channels.map(channel => channel._id),
-    [{ username: server.owner, active: false }]
+    server._id.toString(),
+    server.channels.map(channel => channel._id)
   );
   return server;
 };

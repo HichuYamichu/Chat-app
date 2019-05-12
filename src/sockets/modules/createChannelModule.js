@@ -8,11 +8,12 @@ module.exports = (serverID, Database) => (socket, next) => {
     if (taken) {
       return socket.emit('errorOccured', 'Channel name taken');
     }
-    Object.values(socket.server.of(serverID).sockets).forEach(connectedSocket => connectedSocket.join(data));
 
     const channel = { channelName: data, messages: [] };
     const _id = Database.addChannel(serverID, channel);
     channel._id = _id;
+    Object.values(socket.server.of(serverID).sockets).forEach(connectedSocket =>
+      connectedSocket.join(_id));
     socket.server.of(serverID).emit('addChannel', channel);
   });
   next();

@@ -1,9 +1,9 @@
-module.exports = serverID => (socket, next) => {
-  socket.on('disconnect', () => {
-    socket.server
-      .of(serverID)
-      .users.find(user => user.username === socket.user.username).active = false;
-    socket.server.of(serverID).emit('updateActiveUsers', socket.server.of(serverID).users);
+module.exports = (serverID, Database) => (socket, next) => {
+  socket.on('disconnect', async () => {
+    const { value } = await Database.updateUserStatus(serverID, socket.user._id, false);
+    if (value) {
+      socket.server.of(serverID).emit('updateActiveUsers', value.users);
+    }
   });
   next();
 };
