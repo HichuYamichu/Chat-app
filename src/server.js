@@ -6,6 +6,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const sessionConfig = require('./sessionConfig');
 const MongoDB = require('./db/index');
+const history = require('connect-history-api-fallback');
 const { prepareQueries } = require('./db/actions');
 const createServer = require('./sockets/serverNamespace');
 const initPublicNamespace = require('./sockets/publicNamespace');
@@ -33,6 +34,12 @@ MongoDB.connectDB(async err => {
   app.use('/api/servers', require('./middleware/httpAuth'));
   app.use('/api/servers', require('./routes/servers'));
 
+  const staticFileMiddleware = express.static('dist');
+  app.use(staticFileMiddleware);
+  app.use(
+    history({})
+  );
+  app.use(staticFileMiddleware);
   app.use('/static', express.static(`${__dirname}\\assets\\`));
 
   initPublicNamespace(io, sessionMiddleware);
@@ -46,7 +53,7 @@ MongoDB.connectDB(async err => {
       io,
       sessionMiddleware,
       savedServer._id.toString(),
-      savedServer.channels.map(channel => channel._id),
+      savedServer.channels.map(channel => channel._id)
     );
   });
 

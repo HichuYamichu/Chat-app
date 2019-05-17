@@ -7,6 +7,6 @@ module.exports = async (socket, serverID) => {
     username: socket.handshake.session.user.username,
     active: false
   });
-  const server = await Database.retriveServers([new ObjectID(serverID)]);
+  const server = await Database.retriveServers([new ObjectID(serverID).toString()]);
   return server[0];
 };

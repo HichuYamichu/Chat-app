@@ -6,7 +6,7 @@ const { ObjectID } = require('mongodb');
 module.exports = async (io, sessionMiddleware, socket, serverData) => {
   const err = await newServerPolicy(serverData);
   if (err) throw new Error(err);
-  const id = new ObjectID();
+  const id = new ObjectID().toString();
   serverData.owner = {
     _id: socket.handshake.session.user._id,
     username: socket.handshake.session.user.username
@@ -26,7 +26,7 @@ module.exports = async (io, sessionMiddleware, socket, serverData) => {
   createServerNamespace(
     io,
     sessionMiddleware,
-    server._id.toString(),
+    server._id,
     server.channels.map(channel => channel._id)
   );
   return server;

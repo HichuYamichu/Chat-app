@@ -4,13 +4,13 @@ module.exports = (serverID, Database) => (socket, next) => {
   socket.on('updateRoles', roles => {
     roles.forEach(role => {
       if (!role._id) {
-        role._id = new ObjectID();
+        role._id = new ObjectID().toString();
       }
     });
     Database.updateRoles(serverID, roles);
     Object.values(socket.server.of(serverID).sockets).forEach(connectedSocket => {
       const newUserRoles = roles.filter(role =>
-        role.roleMembers.includes(connectedSocket.user.username));
+        role.roleMembers.includes(connectedSocket.user._id));
       connectedSocket.user.roles = newUserRoles;
     });
     socket.server.of(serverID).emit('updateRoles', roles);
