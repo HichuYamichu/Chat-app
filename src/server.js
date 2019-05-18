@@ -20,7 +20,7 @@ MongoDB.connectDB(async err => {
 
   app.use(
     cors({
-      origin: ['http://localhost:8080'],
+      origin: ['http://localhost:8080', 'http://localhost:8081'],
       credentials: true
     })
   );
@@ -40,7 +40,7 @@ MongoDB.connectDB(async err => {
     history({})
   );
   app.use(staticFileMiddleware);
-  app.use('/static', express.static(`${__dirname}\\assets\\`));
+  app.use('/static', express.static('./assets'));
 
   initPublicNamespace(io, sessionMiddleware);
   const savedServers = await db

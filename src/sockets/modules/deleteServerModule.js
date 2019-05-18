@@ -6,7 +6,7 @@ module.exports = (serverID, Database) => (socket, next) => {
       connectedSocket.disconnect();
     });
     delete socket.server.nsps[`/${serverID}`];
-    require('fs').unlinkSync(`./src/assets/${serverID}.jpg`);
+    require('fs').unlinkSync(`./assets/${serverID}.jpg`);
   });
   next();
 };

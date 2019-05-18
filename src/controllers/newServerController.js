@@ -13,7 +13,7 @@ module.exports = async (io, sessionMiddleware, socket, serverData) => {
   };
   if (serverData.icon) {
     serverData.hasIcon = true;
-    require('fs').writeFile(`./src/assets/${id}.jpg`, serverData.icon, err => {
+    require('fs').writeFile(`./assets/${id}.jpg`, serverData.icon, err => {
       if (err) console.log(err);
     });
   } else {
