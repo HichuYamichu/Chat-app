@@ -20,7 +20,7 @@ MongoDB.connectDB(async err => {
 
   app.use(
     cors({
-      origin: ['http://localhost:8080', 'http://localhost:8081'],
+      origin: ['http://localhost:8080', 'http://localhost:8081', 'app://chat-app-client'],
       credentials: true
     })
   );
@@ -41,6 +41,7 @@ MongoDB.connectDB(async err => {
   );
   app.use(staticFileMiddleware);
   app.use('/static', express.static('./assets'));
+  app.use('/download', express.static('./dist_electron'));
 
   initPublicNamespace(io, sessionMiddleware);
   const savedServers = await db
