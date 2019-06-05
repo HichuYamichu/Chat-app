@@ -1,19 +1,16 @@
 const { ObjectID } = require('mongodb');
-let db;
+const { getDB: db } = require('./index');
 
 module.exports = {
-  prepareQueries(_db) {
-    db = _db;
-  },
   checkServerNames(serverName) {
-    return db
+    return db()
       .collection('servers')
       .find({ serverName }, { projection: { _id: true } })
       .limit(1)
       .count();
   },
   checkChannelNames(serverID, channelName) {
-    return db
+    return db()
       .collection('servers')
       .find(
         { '_id': serverID, 'channels.channelName': channelName },
@@ -23,7 +20,7 @@ module.exports = {
       .count();
   },
   async createServer(serverData, serverID) {
-    const server = await db.collection('servers').insertOne({
+    const server = await db().collection('servers').insertOne({
       '_id': serverID,
       'serverName': serverData.serverName,
       'private': serverData.private,
@@ -41,7 +38,7 @@ module.exports = {
         }
       ]
     });
-    await db
+    await db()
       .collection('users')
       .updateOne(
         { _id: serverData.owner._id },
@@ -51,8 +48,8 @@ module.exports = {
   },
 
   leaveServer(serverID, userID) {
-    db.collection('users').updateOne({ _id: userID }, { $pull: { memberOf: serverID } });
-    return db
+    db().collection('users').updateOne({ _id: userID }, { $pull: { memberOf: serverID } });
+    return db()
       .collection('servers')
       .findOneAndUpdate(
         { _id: serverID },
@@ -62,48 +59,48 @@ module.exports = {
   },
 
   deleteServer(serverID) {
-    db.collection('users').updateMany({ memberOf: serverID }, { $pull: { memberOf: serverID } });
-    db.collection('servers').deleteOne({ _id: serverID });
+    db().collection('users').updateMany({ memberOf: serverID }, { $pull: { memberOf: serverID } });
+    db().collection('servers').deleteOne({ _id: serverID });
   },
   addChannel(serverID, channelData) {
     const _id = new ObjectID().toString();
-    db.collection('servers').updateOne(
+    db().collection('servers').updateOne(
       { _id: serverID },
       { $push: { channels: { _id, channelName: channelData.channelName, messages: [] } } }
     );
     return _id;
   },
   deleteChannel(serverID, channelID) {
-    db.collection('servers').updateOne(
+    db().collection('servers').updateOne(
       { _id: serverID },
       { $pull: { channels: { _id: channelID } } }
     );
   },
   checkUserNames(userName) {
-    return db.collection('users').findOne({ username: userName });
+    return db().collection('users').findOne({ username: userName });
   },
   insertUser(user) {
-    return db.collection('users').insertOne(user);
+    return db().collection('users').insertOne(user);
   },
   getPasswordHash(username) {
-    return db.collection('users').findOne({ username }, { projection: { password: true } });
+    return db().collection('users').findOne({ username }, { projection: { password: true } });
   },
   retriveUser(username) {
-    return db.collection('users').findOne({ username }, { projection: { password: false } });
+    return db().collection('users').findOne({ username }, { projection: { password: false } });
   },
   retriveServers(serversID) {
-    return db
+    return db()
       .collection('servers')
       .find({ _id: { $in: serversID } }, { projection: { 'channels.messages': { $slice: -15 } } })
       .toArray();
   },
   retriveServer(serverID) {
-    return db
+    return db()
       .collection('servers')
       .findOne({ _id: serverID }, { projection: { roles: true } });
   },
   getServerNamesAndDesc() {
-    return db
+    return db()
       .collection('servers')
       .aggregate([
         { $project: { serverName: true, description: true } },
@@ -114,7 +111,7 @@ module.exports = {
   },
   insertMessage(serverID, channelID, message) {
     message._id = new ObjectID().toString();
-    db.collection('servers').updateOne(
+    db().collection('servers').updateOne(
       {
         _id: serverID,
         channels: { $elemMatch: { _id: channelID } }
@@ -123,7 +120,7 @@ module.exports = {
     );
   },
   fetchMessages(serverID, channelID, lastMesssageTimestamp) {
-    return db
+    return db()
       .collection('servers')
       .aggregate([
         { $unwind: '$channels' },
@@ -141,17 +138,17 @@ module.exports = {
       .toArray();
   },
   userJoin(serverID, user) {
-    db.collection('users').updateOne(
+    db().collection('users').updateOne(
       { _id: user._id },
       { $push: { memberOf: serverID } }
     );
-    db.collection('servers').updateOne(
+    db().collection('servers').updateOne(
       { _id: serverID },
       { $push: { 'roles.0.roleMembers': user._id, 'users': user } }
     );
   },
   updateUserStatus(serverID, userID, value) {
-    return db
+    return db()
       .collection('servers')
       .findOneAndUpdate(
         { _id: serverID, users: { $elemMatch: { _id: userID } } },
@@ -160,10 +157,10 @@ module.exports = {
       );
   },
   updateRoles(serverID, roles) {
-    db.collection('servers').updateOne({ _id: serverID }, { $set: { roles } });
+    db().collection('servers').updateOne({ _id: serverID }, { $set: { roles } });
   },
   addUserToRole(serverID, roleName, username) {
-    return db.collection('servers').findOneAndUpdate(
+    return db().collection('servers').findOneAndUpdate(
       {
         _id: serverID,
         roles: { $elemMatch: { roleName } }
@@ -173,7 +170,7 @@ module.exports = {
     );
   },
   removeUserFromRole(serverID, roleName, username) {
-    return db
+    return db()
       .collection('servers')
       .findOneAndUpdate(
         { _id: serverID, roles: { $elemMatch: { roleName } } },

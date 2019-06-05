@@ -7,7 +7,6 @@ const bodyParser = require('body-parser');
 const sessionConfig = require('./sessionConfig');
 const MongoDB = require('./db/index');
 const history = require('connect-history-api-fallback');
-const { prepareQueries } = require('./db/actions');
 const createServer = require('./sockets/serverNamespace');
 const initPublicNamespace = require('./sockets/publicNamespace');
 
@@ -16,7 +15,6 @@ MongoDB.connectDB(async err => {
 
   const db = MongoDB.getDB();
   await sessionConfig.init(db);
-  prepareQueries(db);
 
   app.use(
     cors({
