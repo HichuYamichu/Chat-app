@@ -62,11 +62,11 @@ module.exports = {
     db().collection('users').updateMany({ memberOf: serverID }, { $pull: { memberOf: serverID } });
     db().collection('servers').deleteOne({ _id: serverID });
   },
-  addChannel(serverID, channelData) {
+  addChannel(serverID, channels) {
     const _id = new ObjectID().toString();
     db().collection('servers').updateOne(
       { _id: serverID },
-      { $push: { channels: { _id, channelName: channelData.channelName, messages: [] } } }
+      { $set: { channels } }
     );
     return _id;
   },
